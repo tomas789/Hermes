@@ -24,6 +24,7 @@ namespace Hermés.Core
 
         private void Dispatcher()
         {
+            throw new NotImplementedException();
         }
 
         public void Dispose()

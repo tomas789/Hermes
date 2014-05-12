@@ -8,6 +8,16 @@ namespace Hermés.Core.Common
 {
     class PriorityQueue<T> : IEnumerable<T> where T : IComparable<T>
     {
+        public void Enque(T t)
+        {
+            throw new NotImplementedException();
+        }
+
+        public T Deque()
+        {
+            throw new NotImplementedException();
+        }
+
         public IEnumerator<T> GetEnumerator()
         {
             throw new NotImplementedException();
