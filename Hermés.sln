@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.21005.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaiveStrategy", "NaiveStrategy\NaiveStrategy.csproj", "{D609AEC2-1B02-465C-9F29-DB3DB64CBE1D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hermés.Core", "Hermés.Core\Hermés.Core.csproj", "{F4B4A19B-12E0-46B2-873D-CCD72586556B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D609AEC2-1B02-465C-9F29-DB3DB64CBE1D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D609AEC2-1B02-465C-9F29-DB3DB64CBE1D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D609AEC2-1B02-465C-9F29-DB3DB64CBE1D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D609AEC2-1B02-465C-9F29-DB3DB64CBE1D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F4B4A19B-12E0-46B2-873D-CCD72586556B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F4B4A19B-12E0-46B2-873D-CCD72586556B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F4B4A19B-12E0-46B2-873D-CCD72586556B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F4B4A19B-12E0-46B2-873D-CCD72586556B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
