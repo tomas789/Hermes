@@ -33,6 +33,15 @@ namespace Hermés.Core.Test.Common
     public class EventPriorityQueueTest
     {
         [TestMethod]
+        public void DateTimeChangingCheck()
+        {
+            var d1 = DateTime.Now;
+            var d2 = d1.AddHours(100);
+            Assert.AreNotEqual(d1,d2);
+        }
+
+
+        [TestMethod]
         public void EventMockCheck()
         {
             var dt = DateTime.Now;
@@ -61,15 +70,23 @@ namespace Hermés.Core.Test.Common
             var queue = new EventPriorityQueue();
             
             var dt = DateTime.Now;
-            for (var i = 0; i < 4; ++i) 
-                queue.Enqueue(new EventMock(dt + TimeSpan.FromHours(i),i));
+            for (var i = 0; i < 4; ++i)
+            {
+                var ndt = dt.AddHours(i*100);
+                var e = new EventMock(ndt, i);
+                queue.Enqueue(e);
+            }
             queue.Enqueue(new EventMock(dt, 4));
 
             var listtest = new List<Event>();
             listtest.Add(new EventMock(dt,0));
             listtest.Add(new EventMock(dt,4));
             for (var i = 1; i < 4; ++i)
-                listtest.Add(new EventMock(dt + TimeSpan.FromHours(i),i));
+            {
+                var ndt = dt.AddHours(i * 100);
+                var e = new EventMock(ndt, i);
+                listtest.Add(e);
+            }
 
             var listtrue = new List<Event>();
             for (var i = 0; i < 5; ++i)

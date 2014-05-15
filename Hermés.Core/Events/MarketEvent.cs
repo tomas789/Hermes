@@ -8,6 +8,15 @@ namespace Hermés.Core.Events
 {
     public class MarketEvent : Event
     {
+        public double? O;
+        public double? H;
+        public double? L;
+        public double? C;
+        public double? V;
+        public double? I;
+
+        public Ticker Ticker;
+
         public MarketEvent() : base(DateTime.Now)
         {
             
