@@ -119,7 +119,8 @@ namespace Hermés.Core.Test.Common
             var time = DateTime.Now;
             for (var i = 0; i < 5; ++i)
             {
-                var e = new EventMock(time + TimeSpan.FromDays(i), 0);
+                var shifted = time.AddDays(1);
+                var e = new EventMock(shifted, 0);
                 expected.Add(e);
                 queue.Enqueue(e);
             }

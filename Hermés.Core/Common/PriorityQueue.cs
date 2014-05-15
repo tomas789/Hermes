@@ -11,6 +11,8 @@ namespace Hermés.Core.Common
         private readonly SortedDictionary<DateTime, Queue<Event>> _queue =
             new SortedDictionary<DateTime, Queue<Event>>();
 
+        public int Count { get; private set; }
+
         public void Enqueue(Event e)
         {
             var dt = e.Time;
@@ -25,16 +27,22 @@ namespace Hermés.Core.Common
                 queue.Enqueue(e);
                 _queue.Add(dt, queue);
             }
+
+            ++Count;
         }
 
         public Event Dequeue()
         {
             if (_queue.Count <= 0) 
-                return null;
+                throw new InvalidOperationException();
+
             var queue = _queue.Values.First();
             var e = queue.Dequeue();
+
             if (queue.Count == 0)
                 _queue.Remove(e.Time);
+
+            --Count;
             return e;
         }
 
