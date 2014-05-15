@@ -20,6 +20,17 @@ namespace Hermés.Core
 
         public IBroker Broker;
 
+        public double PortfolioValue
+        {
+            get
+            {
+                return GetPortfolioValue();
+            }
+        }
+
+        protected Dictionary<Ticker, Position> Positions = 
+            new Dictionary<Ticker, Position>(); 
+
         public void DispatchEvent(Event e)
         {
             var ts = new TypeSwitch()
@@ -36,9 +47,15 @@ namespace Hermés.Core
         public abstract void DispatchConcrete(OrderEvent e);
         public abstract void DispatchConcrete(SignalEvent e);
 
-        
+        protected abstract double GetPortfolioValue();
     }
 
+    #region StrategiesHelper
+
+    /// <summary>
+    /// This helper allows to have indexer on member with 
+    /// comfortable syntax.
+    /// </summary>
     public class StrategiesHelper
     {
         private readonly List<IStrategy> _strategies = 
@@ -48,7 +65,7 @@ namespace Hermés.Core
 
         public StrategiesHelper(Portfolio portfolio)
         {
-            this._portfolio = portfolio;
+            _portfolio = portfolio;
         }
 
         public IStrategy this[int i]
@@ -62,4 +79,6 @@ namespace Hermés.Core
             _strategies.Add(strategy);
         }
     }
+
+#endregion
 }

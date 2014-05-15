@@ -10,39 +10,53 @@ namespace Hermés.Core
 {
     class NaivePortfolio : Portfolio
     {
-        public override void DispatchConcrete(Events.FillEvent e)
+        private readonly List<FillEvent> _fillEvents =
+            new List<FillEvent>();
+
+        private double _initialCapital;
+
+        public NaivePortfolio(double initialCapital)
         {
-            throw new NotImplementedException();
+            _initialCapital = initialCapital;
         }
 
-        public override void DispatchConcrete(Events.MarketEvent e)
+        public override void DispatchConcrete(FillEvent ev)
+        {
+            _fillEvents.Add(ev);
+        }
+
+        public override void DispatchConcrete(MarketEvent e)
         {
         }
 
-        public override void DispatchConcrete(Events.OrderEvent e)
+        public override void DispatchConcrete(OrderEvent e)
         {
-            throw new NotImplementedException();
         }
 
-        public override void DispatchConcrete(Events.SignalEvent e)
+        public override void DispatchConcrete(SignalEvent e)
         {
             if (e.Kind == SignalKind.Hold)
                 return;
 
-            OrderDirection direction;
+            TradeDirection direction;
             switch (e.Kind)
             {
                 case SignalKind.Buy:
-                    direction = OrderDirection.Buy;
+                    direction = TradeDirection.Buy;
                     break;
                 case SignalKind.Hold:
-                    direction = OrderDirection.Sell;
+                    direction = TradeDirection.Sell;
                     break;
                 default:
                     throw new ImpossibleException();
             }
 
             var order = new OrderEvent(e.Ticker, direction, OrderKind.Market);
+        }
+
+        protected override double GetPortfolioValue()
+        {
+            throw new NotImplementedException();
         }
     }
 }
