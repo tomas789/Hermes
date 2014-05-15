@@ -10,7 +10,6 @@ using Hermés.Core.Common;
 
 namespace Hermés.Core.Test.Common
 {
-    [TestClass]
     public class EventMock : Event
     {
         public int Value;
@@ -85,6 +84,28 @@ namespace Hermés.Core.Test.Common
 
             for (var i = 0; i < 5; ++i)
                 Assert.IsTrue(listtest[i].Equals(listtrue[i]));
+        }
+
+        public void EventPriorityQueue_TestOnSample(List<Event> expected, EventPriorityQueue queue)
+        {
+            foreach (var e in expected)
+                Assert.IsTrue(e.Equals(queue.Dequeue()));
+        }
+
+        [TestMethod]
+        public void EventPriorityQueue_SamePriorityElements()
+        {
+            var expected = new List<Event>();
+            var queue = new EventPriorityQueue();
+            var time = DateTime.Now;
+            for (var i = 0; i < 5; ++i)
+            {
+                var e = new EventMock(time, 0);
+                expected.Add(e);
+                queue.Enqueue(e);
+            }
+
+            EventPriorityQueue_TestOnSample(expected, queue);
         }
     }
 }
