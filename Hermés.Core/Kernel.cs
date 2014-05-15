@@ -7,7 +7,7 @@ using Hermés.Core.Common;
 
 namespace Hermés.Core
 {
-    sealed class Kernel : IDisposable
+    public sealed class Kernel : IDisposable
     {
         private readonly EventPriorityQueue _events = 
             new EventPriorityQueue();
