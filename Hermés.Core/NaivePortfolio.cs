@@ -54,6 +54,11 @@ namespace Hermés.Core
             var order = new OrderEvent(e.Ticker, direction, OrderKind.Market);
         }
 
+        /// <summary>
+        /// Get value of portfolio including opened positions and
+        /// capital in hold.
+        /// </summary>
+        /// <returns>Portfolio value.</returns>
         protected override double GetPortfolioValue()
         {
             throw new NotImplementedException();

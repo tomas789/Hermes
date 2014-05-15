@@ -9,17 +9,46 @@ using Hermés.Core.Events;
 
 namespace Hermés.Core
 {
+
+    #region Portfolio
+
+    /// <summary>
+    /// Portfolio is central point which is responsible for executing
+    /// all trades suggested by strategies.
+    /// </summary>
     public abstract class Portfolio : IEventConsumer
     {
+        #region Constructors
+
         public Portfolio()
         {
             Strategies = new StrategiesHelper(this);
         }
 
+        #endregion
+
+        #region Prerequisities
+
+        /// <summary>
+        /// List of strategies that are registered to be potentially
+        /// used by the strategy.
+        /// </summary>
         public StrategiesHelper Strategies { get; private set; }
 
+
+        /// <summary>
+        /// Broker which will execute orders.
+        /// </summary>
         public IBroker Broker;
 
+        #endregion
+
+        #region Portfolio valuation
+
+        /// <summary>
+        /// Evaluate overall value of portfolio.
+        /// <see cref="Portfolio.GetPortfolioValue()"/> for more details.
+        /// </summary>
         public double PortfolioValue
         {
             get
@@ -28,9 +57,27 @@ namespace Hermés.Core
             }
         }
 
-        protected Dictionary<Ticker, Position> Positions = 
-            new Dictionary<Ticker, Position>(); 
+        #endregion
 
+        /// <summary>
+        /// Get value of portfolio including opened positions and
+        /// capital in hold.
+        /// </summary>
+        /// <returns>Portfolio value.</returns>
+        protected abstract double GetPortfolioValue();
+
+        /// <summary>
+        /// List of all positions taken by portfolio.
+        /// </summary>
+        protected Dictionary<Ticker, Position> Positions = 
+            new Dictionary<Ticker, Position>();
+
+        #region Event dispatching
+
+        /// <summary>
+        /// Dispatch event
+        /// </summary>
+        /// <param name="e">Event.</param>
         public void DispatchEvent(Event e)
         {
             var ts = new TypeSwitch()
@@ -47,8 +94,12 @@ namespace Hermés.Core
         public abstract void DispatchConcrete(OrderEvent e);
         public abstract void DispatchConcrete(SignalEvent e);
 
-        protected abstract double GetPortfolioValue();
+        #endregion
+
+        
     }
+
+    #endregion
 
     #region StrategiesHelper
 
@@ -80,5 +131,5 @@ namespace Hermés.Core
         }
     }
 
-#endregion
+    #endregion
 }
