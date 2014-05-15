@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Hermés.Core
 {
-    public abstract class Event : IComparable<Event>
+    public abstract class Event : IComparable<Event>, IEquatable<Event>
     {
         public DateTime Time { private set; get; }
 
@@ -19,6 +19,11 @@ namespace Hermés.Core
         public int CompareTo(Event other)
         {
             return Time.CompareTo(other.Time);
+        }
+
+        public virtual bool Equals(Event other)
+        {
+            return Time.Equals(other.Time);
         }
     }
 }

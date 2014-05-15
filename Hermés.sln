@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaiveStrategy", "NaiveStrat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hermés.Core", "Hermés.Core\Hermés.Core.csproj", "{F4B4A19B-12E0-46B2-873D-CCD72586556B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hermés.Core.Test", "Hermés.Core.Test\Hermés.Core.Test.csproj", "{F6ADC25F-1FE8-492A-B279-F3EABCB8A951}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{F4B4A19B-12E0-46B2-873D-CCD72586556B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F4B4A19B-12E0-46B2-873D-CCD72586556B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F4B4A19B-12E0-46B2-873D-CCD72586556B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F6ADC25F-1FE8-492A-B279-F3EABCB8A951}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F6ADC25F-1FE8-492A-B279-F3EABCB8A951}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F6ADC25F-1FE8-492A-B279-F3EABCB8A951}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F6ADC25F-1FE8-492A-B279-F3EABCB8A951}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

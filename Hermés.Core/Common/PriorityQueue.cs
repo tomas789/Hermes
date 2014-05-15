@@ -33,9 +33,14 @@ namespace Hermés.Core.Common
 
 
     // not variadic
-    class EventPriorityQueue
+    public class EventPriorityQueue
     {
         private SortedDictionary<DateTime, Queue<Event>> p_queue;
+
+        public EventPriorityQueue()
+        {
+            p_queue = new SortedDictionary<DateTime, Queue<Event>>();
+        }
 
         // slow implementation for queues of low elements
         public void Enqueue(Event e)
