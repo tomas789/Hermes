@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -68,7 +69,9 @@ namespace Hermés.Core.Test.Common
             listtest.Add(new EventMock(dt,0));
             listtest.Add(new EventMock(dt,4));
             for (var i = 1; i < 4; ++i)
-                listtest.Add(new EventMock(dt.AddHours(i),i));
+            {
+                listtest.Add(new EventMock(dt, i));
+            }
 
             var listtrue = new List<Event>();
             for (var i = 0; i < 5; ++i)
@@ -104,6 +107,40 @@ namespace Hermés.Core.Test.Common
                 expected.Add(e);
                 queue.Enqueue(e);
             }
+
+            EventPriorityQueue_TestOnSample(expected, queue);
+        }
+
+        [TestMethod]
+        public void EventPriorityQueue_DifferentPriorityElementsRightOrder()
+        {
+            var expected = new List<Event>();
+            var queue = new EventPriorityQueue();
+            var time = DateTime.Now;
+            for (var i = 0; i < 5; ++i)
+            {
+                var e = new EventMock(time + TimeSpan.FromDays(i), 0);
+                expected.Add(e);
+                queue.Enqueue(e);
+            }
+
+            EventPriorityQueue_TestOnSample(expected, queue);
+        }
+
+        [TestMethod]
+        public void EventPriorityQueue_DifferentPriorityElementsDifferentOrder()
+        {
+            var expected = new List<Event>();
+            var queue = new EventPriorityQueue();
+            var time = DateTime.Now;
+            for (var i = 0; i < 5; ++i)
+            {
+                var e = new EventMock(time + TimeSpan.FromDays(i), 0);
+                expected.Add(e);
+            }
+
+            for (var i = expected.Count - 1; i >= 0; --i)
+                queue.Enqueue(expected[i]);
 
             EventPriorityQueue_TestOnSample(expected, queue);
         }
