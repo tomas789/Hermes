@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Hermés.Core
 {
-    interface IBroker : IEventConsumer, IDisposable
+    public interface IBroker : IEventConsumer, IDisposable
     {
         void Initialize(Portfolio portfolio);
     }

@@ -6,7 +6,11 @@ using System.Threading.Tasks;
 
 namespace Hermés.Core.Events
 {
-    class FillEvent : Event
+    public class FillEvent : Event
     {
+        public FillEvent() : base(DateTime.Now)
+        {
+            
+        }
     }
 }

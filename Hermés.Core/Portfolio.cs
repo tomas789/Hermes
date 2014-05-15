@@ -9,7 +9,7 @@ using Hermés.Core.Events;
 
 namespace Hermés.Core
 {
-    abstract class Portfolio : IEventConsumer
+    public abstract class Portfolio : IEventConsumer
     {
         public Portfolio()
         {
@@ -18,7 +18,7 @@ namespace Hermés.Core
 
         public StrategiesHelper Strategies { get; private set; }
 
-        public IBroker Broker { get; set; }
+        public IBroker Broker;
 
         public void DispatchEvent(Event e)
         {
@@ -39,7 +39,7 @@ namespace Hermés.Core
         
     }
 
-    class StrategiesHelper
+    public class StrategiesHelper
     {
         private readonly List<IStrategy> _strategies = 
             new List<IStrategy>();

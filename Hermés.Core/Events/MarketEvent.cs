@@ -6,7 +6,11 @@ using System.Threading.Tasks;
 
 namespace Hermés.Core.Events
 {
-    class MarketEvent : Event
+    public class MarketEvent : Event
     {
+        public MarketEvent() : base(DateTime.Now)
+        {
+            
+        }
     }
 }
