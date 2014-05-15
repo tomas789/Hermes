@@ -17,7 +17,6 @@ namespace Hermés.Core
 
         public override void DispatchConcrete(Events.MarketEvent e)
         {
-            throw new NotImplementedException();
         }
 
         public override void DispatchConcrete(Events.OrderEvent e)
