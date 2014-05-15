@@ -10,7 +10,6 @@ using Hermés.Core.Common;
 
 namespace Hermés.Core.Test.Common
 {
-    [TestClass]
     public class EventMock : Event
     {
         public int Value;
@@ -77,7 +76,7 @@ namespace Hermés.Core.Test.Common
                 var e = queue.Dequeue();
                 if (e != null)
                 {
-                    listtrue.Add(queue.Dequeue());
+                    listtrue.Add(e);
                 }
                 else 
                     listtrue.Add(null);

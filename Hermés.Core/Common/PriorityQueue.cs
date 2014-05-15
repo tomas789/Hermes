@@ -53,7 +53,7 @@ namespace Hermés.Core.Common
             }
             else
             {
-                Queue<Event> queue = new Queue<Event>();
+                var queue = new Queue<Event>();
                 queue.Enqueue(e);
                 p_queue.Add(dt, queue);
             }
