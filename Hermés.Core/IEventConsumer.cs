@@ -8,5 +8,6 @@ namespace Hermés.Core
 {
     public interface IEventConsumer
     {
+        void DispatchEvent(Event e);
     }
 }

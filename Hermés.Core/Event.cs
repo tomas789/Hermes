@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Hermés.Core
 {
-    abstract class Event : IComparable<Event>
+    public abstract class Event : IComparable<Event>
     {
         public DateTime Time { private set; get; }
 
