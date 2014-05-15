@@ -61,14 +61,14 @@ namespace Hermés.Core.Test.Common
             
             var dt = DateTime.Now;
             for (var i = 0; i < 4; ++i) 
-                queue.Enqueue(new EventMock(dt.AddHours(i),i));
+                queue.Enqueue(new EventMock(dt + TimeSpan.FromHours(i),i));
             queue.Enqueue(new EventMock(dt, 4));
 
             var listtest = new List<Event>();
             listtest.Add(new EventMock(dt,0));
             listtest.Add(new EventMock(dt,4));
             for (var i = 1; i < 4; ++i)
-                listtest.Add(new EventMock(dt.AddHours(i),i));
+                listtest.Add(new EventMock(dt + TimeSpan.FromHours(i),i));
 
             var listtrue = new List<Event>();
             for (var i = 0; i < 5; ++i)
