@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,14 +6,16 @@ using System.Threading.Tasks;
 
 namespace Hermés.Core.Common
 {
+    // not implemented yet
     class PriorityQueue<T> : IEnumerable<T> where T : IComparable<T>
     {
-        public void Enque(T t)
+
+        public void Enqueue(T t)
         {
             throw new NotImplementedException();
         }
 
-        public T Deque()
+        public T Dequeue()
         {
             throw new NotImplementedException();
         }
@@ -27,5 +29,55 @@ namespace Hermés.Core.Common
         {
             throw new NotImplementedException();
         }
+    }
+
+
+    // not variadic
+    class EventPriorityQueue
+    {
+        private SortedDictionary<DateTime, Queue<Event>> p_queue;
+
+        // slow implementation for queues of low elements
+        public void Enqueue(Event e)
+        {
+            DateTime dt = e.Time;
+            if (p_queue.ContainsKey(dt))
+            {
+                Queue<Event> queue = p_queue[dt];
+                queue.Enqueue(e);
+            }
+            else
+            {
+                Queue<Event> queue = new Queue<Event>();
+                queue.Enqueue(e);
+                p_queue.Add(dt, queue);
+            }
+        }
+
+        public Event Dequeue()
+        {
+            if (p_queue.Count > 0)
+            {
+                Queue<Event> queue = p_queue.Values.First();
+                Event e = queue.Dequeue();
+                if (queue.Count == 0)
+                    p_queue.Remove(e.Time);
+                return e;
+            }
+            return null;
+        }
+
+        public IEnumerator<Event> GetEnumerator()
+        {
+            foreach (KeyValuePair<DateTime,Queue<Event>> pair in p_queue)
+            {
+                foreach (Event e in pair.Value)
+                {
+                    yield return e;
+                }
+            }
+        }
+
+
     }
 }
