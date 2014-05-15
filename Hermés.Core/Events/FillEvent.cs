@@ -3,14 +3,27 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Hermés.Core.Common;
 
 namespace Hermés.Core.Events
 {
     public class FillEvent : Event
     {
-        public FillEvent() : base(DateTime.Now)
+        public Ticker Ticker;
+        public TradeDirection Direction;
+        public double Price;
+        public double FillPrice;
+        public double Cost;
+
+        public FillEvent(Ticker ticker, TradeDirection direction, 
+            double price, double fillPrice, double cost)
+            : base(DateTime.Now)
         {
-            
+            Ticker = ticker;
+            Direction = direction;
+            Price = price;
+            FillPrice = fillPrice;
+            Cost = cost;
         }
     }
 }

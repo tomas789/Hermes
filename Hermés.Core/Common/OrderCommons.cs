@@ -11,7 +11,7 @@ namespace Hermés.Core.Common
         Market, Limit
     }
 
-    public enum OrderDirection
+    public enum TradeDirection
     {
         Buy, Sell
     }

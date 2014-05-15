@@ -39,6 +39,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Brokers\AMPBroker.cs" />
     <Compile Include="Common\ImpossibleException.cs" />
     <Compile Include="Common\OrderCommons.cs" />
     <Compile Include="Common\PriorityQueue.cs" />
@@ -56,6 +57,7 @@
     <Compile Include="Kernel.cs" />
     <Compile Include="NaivePortfolio.cs" />
     <Compile Include="Portfolio.cs" />
+    <Compile Include="Position.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Ticker.cs" />
   </ItemGroup>
