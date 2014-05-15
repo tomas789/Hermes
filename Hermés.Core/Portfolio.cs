@@ -20,14 +20,17 @@ namespace Hermés.Core
     {
         #region Constructors
 
-        public Portfolio()
+        public Portfolio(Kernel kernel)
         {
             Strategies = new StrategiesHelper(this);
+            Kernel = kernel;
         }
 
         #endregion
 
         #region Prerequisities
+
+        public Kernel Kernel { get; protected set; }
 
         /// <summary>
         /// List of strategies that are registered to be potentially
@@ -71,6 +74,9 @@ namespace Hermés.Core
         /// </summary>
         protected Dictionary<Ticker, Position> Positions = 
             new Dictionary<Ticker, Position>();
+
+        public readonly Dictionary<Ticker, TickerInfo> TickerInfos = 
+            new Dictionary<Ticker, TickerInfo>(); 
 
         #region Event dispatching
 

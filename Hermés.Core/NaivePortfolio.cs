@@ -15,7 +15,8 @@ namespace Hermés.Core
 
         private double _initialCapital;
 
-        public NaivePortfolio(double initialCapital)
+        public NaivePortfolio(Kernel kernel, double initialCapital)
+            : base(kernel)
         {
             _initialCapital = initialCapital;
         }
@@ -52,16 +53,47 @@ namespace Hermés.Core
             }
 
             var order = new OrderEvent(e.Ticker, direction, OrderKind.Market);
+            Kernel.AddEvent(order);
         }
 
-        /// <summary>
-        /// Get value of portfolio including opened positions and
-        /// capital in hold.
-        /// </summary>
-        /// <returns>Portfolio value.</returns>
         protected override double GetPortfolioValue()
         {
-            throw new NotImplementedException();
+            var sizeHolded = new Dictionary<Ticker, double>();
+            foreach (var position in Positions.Values)
+            {
+                if (!sizeHolded.ContainsKey(position.Ticker))
+                    sizeHolded.Add(position.Ticker, 0);
+
+                double change = 0;
+                switch (position.Direction)
+                {
+                    case TradeDirection.Buy:
+                        change = position.Size;
+                        break;
+                    case TradeDirection.Sell:
+                        change = (-1)*position.Size;
+                        break;
+                    default:
+                        throw new ImpossibleException();
+                }
+
+                sizeHolded[position.Ticker] += change;
+            }
+
+            var value = _initialCapital;
+            foreach (var item in sizeHolded)
+            {
+                var ticker = item.Key;
+                var pts = item.Value;
+
+                if (!TickerInfos.ContainsKey(ticker))
+                    throw new InvalidOperationException(
+                        string.Format("Unable to find infos about ticker {0}", ticker));
+
+                value += pts * TickerInfos[ticker].PointPrice;
+            }
+
+            return value;
         }
     }
 }
