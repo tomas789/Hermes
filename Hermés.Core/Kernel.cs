@@ -9,27 +9,38 @@ namespace Hermés.Core
 {
     sealed class Kernel : IDisposable
     {
-        private PriorityQueue<Event> events;
-        private IEnumerable<IEventConsumer> eventConsumers;
+        private readonly EventPriorityQueue _events = 
+            new EventPriorityQueue();
+        private readonly List<IEventConsumer> _eventConsumers = 
+            new List<IEventConsumer>();
 
         public void Run()
         {
-            throw new NotImplementedException();
+            Dispatcher();
+        }
+
+        public void RegisterEventConsumer(IEventConsumer consumer)
+        {
+            _eventConsumers.Add(consumer);
         }
 
         public void AddEvent(Event ev)
         {
-            throw new NotImplementedException();
+            _events.Enqueue(ev);
         }
 
         private void Dispatcher()
         {
-            throw new NotImplementedException();
+            while (_events.Count != 0)
+            {
+                var ev = _events.Dequeue();
+                foreach (var consumer in _eventConsumers)
+                    consumer.DispatchEvent(ev);
+            }
         }
 
         public void Dispose()
         {
-            throw new NotImplementedException();
         }
     }
 }
