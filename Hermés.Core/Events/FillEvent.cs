@@ -14,9 +14,10 @@ namespace Hermés.Core.Events
         public double Price;
         public double FillPrice;
         public double Cost;
+        public double Size;
 
         public FillEvent(Ticker ticker, TradeDirection direction, 
-            double price, double fillPrice, double cost)
+            double price, double fillPrice, double cost, double size)
             : base(DateTime.Now)
         {
             Ticker = ticker;
@@ -24,6 +25,7 @@ namespace Hermés.Core.Events
             Price = price;
             FillPrice = fillPrice;
             Cost = cost;
+            Size = size;
         }
     }
 }

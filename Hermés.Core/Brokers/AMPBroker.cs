@@ -38,7 +38,7 @@ namespace Hermés.Core.Brokers
             if (TradeCosts.ContainsKey(ev.Ticker))
                 cost = TradeCosts[ev.Ticker];
 
-            var fill = new FillEvent(ev.Ticker, ev.Direction, ev.Price, ev.Price, cost);
+            var fill = new FillEvent(ev.Ticker, ev.Direction, ev.Price, ev.Price, cost, 1);
             _kernel.AddEvent(fill);
         }
 
