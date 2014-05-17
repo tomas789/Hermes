@@ -8,22 +8,22 @@ using Hermés.Core.Events;
 
 namespace Hermés.Core
 {
-    class NaivePortfolio : Portfolio
+    public class NaivePortfolio : Portfolio
     {
         private readonly List<FillEvent> _fillEvents =
             new List<FillEvent>();
 
-        private double _initialCapital;
+        private readonly double _initialCapital;
 
-        public NaivePortfolio(Kernel kernel, double initialCapital)
-            : base(kernel)
+        public NaivePortfolio(double initialCapital)
         {
             _initialCapital = initialCapital;
         }
 
         public override void DispatchConcrete(FillEvent ev)
         {
-            _fillEvents.Add(ev);
+            var position = new Position(ev.Ticker, ev.Direction, ev.FillPrice, ev.Size);
+            Positions.Add(position);
         }
 
         public override void DispatchConcrete(MarketEvent e)
@@ -45,7 +45,7 @@ namespace Hermés.Core
                 case SignalKind.Buy:
                     direction = TradeDirection.Buy;
                     break;
-                case SignalKind.Hold:
+                case SignalKind.Sell:
                     direction = TradeDirection.Sell;
                     break;
                 default:
@@ -59,19 +59,58 @@ namespace Hermés.Core
         protected override double GetPortfolioValue()
         {
             var sizeHolded = new Dictionary<Ticker, double>();
-            foreach (var position in Positions.Values)
+            var priceCache = new Dictionary<Ticker, double>();
+            foreach (var position in Positions)
             {
                 if (!sizeHolded.ContainsKey(position.Ticker))
                     sizeHolded.Add(position.Ticker, 0);
 
+                if (!priceCache.ContainsKey(position.Ticker))
+                {
+                    var posHolder = position;
+                    Func<Position, PriceKind> selectKind = (pos) =>
+                    {
+                        switch (pos.Direction)
+                        {
+                            case TradeDirection.Buy:
+                                return PriceKind.Ask;
+                            case TradeDirection.Sell:
+                                return PriceKind.Bid;
+                            default:
+                                throw new ImpossibleException();
+                        }
+                    };
+
+                    var pricesBidAsk = (from datafeed in DataFeeds
+                                        select datafeed.CurrentPrice(posHolder.Ticker, 
+                                                                     selectKind(posHolder))
+                                            into datafeedPrice
+                                            where datafeedPrice.HasValue
+                                            select datafeedPrice);
+
+                    var prices = (from datafeed in DataFeeds
+                                  let kind = PriceKind.Unspecified
+                                  select datafeed.CurrentPrice(posHolder.Ticker, kind)
+                                      into datafeedPrice
+                                      where datafeedPrice.HasValue
+                                      select datafeedPrice);
+
+                    var price = pricesBidAsk.Concat(prices).FirstOrDefault();
+                    if (price.HasValue) 
+                        priceCache.Add(position.Ticker, price.Value);
+                    else
+                        throw new OperationCanceledException(
+                            string.Format("Current price not found for ticker {0}", position.Ticker));
+                }
+                
                 double change = 0;
                 switch (position.Direction)
                 {
                     case TradeDirection.Buy:
-                        change = position.Size;
+                        change = (priceCache[position.Ticker] - position.Price) * position.Size;
                         break;
                     case TradeDirection.Sell:
-                        change = (-1)*position.Size;
+                        change = (position.Price - priceCache[position.Ticker]) * position.Size;
                         break;
                     default:
                         throw new ImpossibleException();

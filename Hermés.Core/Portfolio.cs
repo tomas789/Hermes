@@ -20,9 +20,13 @@ namespace Hermés.Core
     {
         #region Constructors
 
-        public Portfolio(Kernel kernel)
+        protected Portfolio()
         {
             Strategies = new StrategiesHelper(this);
+        }
+
+        public void Initialize(Kernel kernel)
+        {
             Kernel = kernel;
         }
 
@@ -30,7 +34,7 @@ namespace Hermés.Core
 
         #region Prerequisities
 
-        public Kernel Kernel { get; protected set; }
+        public Kernel Kernel;
 
         /// <summary>
         /// List of strategies that are registered to be potentially
@@ -43,6 +47,15 @@ namespace Hermés.Core
         /// Broker which will execute orders.
         /// </summary>
         public IBroker Broker;
+
+        public readonly List<DataFeed> DataFeeds =
+            new List<DataFeed>();
+
+        public void AddDataFeed(DataFeed dataFeed)
+        {
+            dataFeed.Initialize(Kernel);
+            DataFeeds.Add(dataFeed);
+        }
 
         #endregion
 
@@ -70,10 +83,9 @@ namespace Hermés.Core
         protected abstract double GetPortfolioValue();
 
         /// <summary>
-        /// List of all positions taken by portfolio.
+        /// Set of all positions executed by portfolio.
         /// </summary>
-        protected Dictionary<Ticker, Position> Positions = 
-            new Dictionary<Ticker, Position>();
+        protected HashSet<Position> Positions = new HashSet<Position>();
 
         public readonly Dictionary<Ticker, TickerInfo> TickerInfos = 
             new Dictionary<Ticker, TickerInfo>(); 
