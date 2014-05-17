@@ -42,7 +42,6 @@ namespace Hermés.Core.Test
         public void NaivePortfolio_SingleTickerPortfolioValue()
         {
             const double initial = 1000.0;
-            var kernel = new Kernel();
             var portfolio = new NaivePortfolio(initial);
             var datafeed = new DataFeedMock(300);
             var ticker = new Ticker("RUT", "CME", 1, 2014);
@@ -52,9 +51,10 @@ namespace Hermés.Core.Test
                 TickSize = 1/4
             };
 
+            var kernel = portfolio.Kernel;
+
             portfolio.TickerInfos.Add(ticker, tickerInfo);
-            portfolio.AddDataFeed(datafeed);
-            portfolio.Initialize(kernel);
+            portfolio.DataFeeds.AddDataFeed(datafeed);
 
             kernel.AddEvent(new FillEvent(ticker, TradeDirection.Buy, 100, 100, 0, 1));
             kernel.AddEvent(new FillEvent(ticker, TradeDirection.Buy, 100, 100, 0, 1));
@@ -71,7 +71,6 @@ namespace Hermés.Core.Test
         public void NaivePortfolio_SingleTickerSellPortfolioValue()
         {
             const double initial = 1000.0;
-            var kernel = new Kernel();
             var portfolio = new NaivePortfolio(initial);
             var datafeed = new DataFeedMock(300);
             var ticker = new Ticker("RUT", "CME", 1, 2014);
@@ -81,9 +80,10 @@ namespace Hermés.Core.Test
                 TickSize = 1 / 4
             };
 
+            var kernel = portfolio.Kernel;
+
             portfolio.TickerInfos.Add(ticker, tickerInfo);
-            portfolio.AddDataFeed(datafeed);
-            portfolio.Initialize(kernel);
+            portfolio.DataFeeds.AddDataFeed(datafeed);
 
             kernel.AddEvent(new FillEvent(ticker, TradeDirection.Sell, 100, 100, 0, 1));
             kernel.AddEvent(new FillEvent(ticker, TradeDirection.Sell, 100, 100, 0, 1));
