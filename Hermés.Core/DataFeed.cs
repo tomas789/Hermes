@@ -27,7 +27,7 @@ namespace Hermés.Core
         /// </remarks>
         /// <param name="ticker">Ticker to get price of.</param>
         /// <param name="priceKind">Kind of price.</param>
-        /// <returns>Current price.</returns>
-        public abstract double? CurrentPrice(Ticker ticker, PriceKind priceKind);
+        /// <returns>Current price group.</returns>
+        public abstract PriceGroup CurrentPrice(Ticker ticker, PriceKind priceKind);
     }
 }

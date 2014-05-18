@@ -45,7 +45,7 @@
     <Compile Include="Common\OrderCommons.cs" />
     <Compile Include="Common\PriorityQueue.cs" />
     <Compile Include="Common\TypeSwitch.cs" />
-    <Compile Include="DataFeeds\YahooDataFeed.cs" />
+    <Compile Include="DataFeeds\CSVDataFeed.cs" />
     <Compile Include="Event.cs" />
     <Compile Include="Events\FillEvent.cs" />
     <Compile Include="Events\MarketEvent.cs" />
