@@ -14,6 +14,9 @@ namespace Hermés.Core
         private readonly List<IEventConsumer> _eventConsumers = 
             new List<IEventConsumer>();
 
+        public DateTime WallTime;
+
+
         public void Run()
         {
             Dispatcher();

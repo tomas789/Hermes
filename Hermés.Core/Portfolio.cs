@@ -43,7 +43,11 @@ namespace Hermés.Core
         /// <summary>
         /// Time of the latest event.
         /// </summary>
-        public DateTime WallTime { get; private set; }
+        public DateTime WallTime
+        {
+            get { return Kernel.WallTime; }
+            set { Kernel.WallTime = value;  }
+        }
 
         /// <summary>
         /// List of strategies that are registered to be potentially
@@ -72,10 +76,7 @@ namespace Hermés.Core
         /// </remarks>
         public double PortfolioValue
         {
-            get
-            {
-                return GetPortfolioValue();
-            }
+            get { return GetPortfolioValue(); }
         }
 
         #endregion
@@ -104,7 +105,7 @@ namespace Hermés.Core
         public void DispatchEvent(Event e)
         {
             if (e.Time > WallTime)
-                WallTime = e.Time;
+                Kernel.WallTime = e.Time;
 
             var ts = new TypeSwitch()
                 .Case((FillEvent x) => DispatchConcrete(x))
