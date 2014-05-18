@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Hermés.Core;
 
-namespace NaiveStrategy
+namespace Hermés.Core.Strategies
 {
     class NaiveStrategy : IStrategy
     {

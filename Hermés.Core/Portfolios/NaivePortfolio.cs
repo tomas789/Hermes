@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Hermés.Core.Common;
 using Hermés.Core.Events;
 
-namespace Hermés.Core
+namespace Hermés.Core.Portfolios
 {
     public class NaivePortfolio : Portfolio
     {

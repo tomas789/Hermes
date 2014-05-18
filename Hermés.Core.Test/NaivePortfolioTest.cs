@@ -3,7 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Hermés.Core;
 using Hermés.Core.Common;
 using Hermés.Core.Events;
-
+using Hermés.Core.Portfolios;
 
 namespace Hermés.Core.Test
 {
