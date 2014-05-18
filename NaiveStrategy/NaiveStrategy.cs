@@ -9,7 +9,7 @@ namespace NaiveStrategy
 {
     class NaiveStrategy : IStrategy
     {
-        public void Initialize(Portfolio portfolio)
+        public void Initialize(Kernel kernel)
         {
             throw new NotImplementedException();
         }
