@@ -7,6 +7,9 @@ using Hermés.Core.Common;
 
 namespace Hermés.Core.Events
 {
+    /// <summary>
+    /// Event representing arrival of new data from market.
+    /// </summary>
     public class MarketEvent : Event
     {
         public PriceGroup Price;

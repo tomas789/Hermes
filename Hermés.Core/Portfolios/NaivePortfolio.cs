@@ -8,6 +8,14 @@ using Hermés.Core.Events;
 
 namespace Hermés.Core.Portfolios
 {
+    /// <summary>
+    /// This portfolio executes every signal obtained from every strategy
+    /// which was registered.
+    /// </summary>
+    /// <remarks>
+    /// Warning: This moght not be the best possible implementation you
+    /// want to run with real money. For testing purposes only.
+    /// </remarks>
     public class NaivePortfolio : Portfolio
     {
         private readonly List<FillEvent> _fillEvents =

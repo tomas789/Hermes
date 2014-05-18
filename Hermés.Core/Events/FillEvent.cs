@@ -7,6 +7,10 @@ using Hermés.Core.Common;
 
 namespace Hermés.Core.Events
 {
+    /// <summary>
+    /// Event representing fill of previously executed order
+    /// based on OrderEvent..
+    /// </summary>
     public class FillEvent : Event
     {
         public Ticker Ticker;

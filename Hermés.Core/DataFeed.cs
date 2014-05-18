@@ -7,10 +7,22 @@ using Hermés.Core.Common;
 
 namespace Hermés.Core
 {
+    /// <summary>
+    /// Source of data from markets.
+    /// </summary>
+    /// <remarks>
+    /// This is especially suitable for offline datafeeds. Expect some
+    /// refactoring to happen when any kind of online datafeed will be 
+    /// added.
+    /// </remarks>
     public abstract class DataFeed : IDisposable
     {
         public Kernel Kernel;
 
+        /// <summary>
+        /// Initialize all resources and freeze inner state if any.
+        /// </summary>
+        /// <param name="kernel"></param>
         public virtual void Initialize(Kernel kernel)
         {
             Kernel = kernel;

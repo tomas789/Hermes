@@ -7,6 +7,9 @@ using Hermés.Core.Common;
 
 namespace Hermés.Core.Events
 {
+    /// <summary>
+    /// Order event.
+    /// </summary>
     public class OrderEvent : Event
     {
         public Ticker Ticker;

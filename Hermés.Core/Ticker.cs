@@ -2,6 +2,13 @@
 
 namespace Hermés.Core
 {
+    /// <summary>
+    /// Description of contract.
+    /// </summary>
+    /// <remarks>
+    /// User is responsible for coherent naming. This isn't doing anything
+    /// like close-matching tickers.
+    /// </remarks>
     public class Ticker : IEquatable<Ticker>
     {
         public string Name;
@@ -20,6 +27,11 @@ namespace Hermés.Core
             Year = year;
         }
 
+        /// <summary>
+        /// Compare Tickers for exact match.
+        /// </summary>
+        /// <param name="other">Ticker to compare with.</param>
+        /// <returns>True iff this and <paramref name="other"/> are matching</returns>
         public bool Equals(Ticker other)
         {
             return Name == other.Name &&

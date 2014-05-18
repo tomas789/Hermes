@@ -7,6 +7,9 @@ using Hermés.Core.Common;
 
 namespace Hermés.Core
 {
+    /// <summary>
+    /// Representation of position held by portfolio.
+    /// </summary>
     public class Position
     {
         public Ticker Ticker;

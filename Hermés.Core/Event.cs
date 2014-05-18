@@ -7,11 +7,14 @@ using System.Threading.Tasks;
 
 namespace Hermés.Core
 {
+    /// <summary>
+    /// Representation of event.
+    /// </summary>
     public abstract class Event : IComparable<Event>, IEquatable<Event>
     {
         public DateTime Time { private set; get; }
 
-        public Event(DateTime time)
+        protected Event(DateTime time)
         {
             this.Time = Time;
         }

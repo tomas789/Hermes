@@ -6,6 +6,12 @@ using System.Threading.Tasks;
 
 namespace Hermés.Core
 {
+    /// <summary>
+    /// Description of Ticker.
+    /// </summary>
+    /// <remarks>
+    /// TODO: Consider creating "TickerDatabase" which holds infos externally.
+    /// </remarks>
     [Serializable]
     public class TickerInfo
     {
