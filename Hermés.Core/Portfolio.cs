@@ -27,6 +27,16 @@ namespace Hermés.Core
             Kernel = new Kernel();
         }
 
+        #endregion
+
+
+        /// <summary>
+        /// Freeze current state and get ready to run simulation.
+        /// </summary>
+        /// <remarks>
+        /// Calling this function causes correct initialization of
+        /// associated parts like broker, strategies, datafeed and so on.
+        /// </remarks>
         public void Initialize()
         {
             Strategies.Initialize(Kernel);
@@ -34,7 +44,6 @@ namespace Hermés.Core
             Broker.Initialize(Kernel);
         }
 
-        #endregion
 
         #region Prerequisities
 

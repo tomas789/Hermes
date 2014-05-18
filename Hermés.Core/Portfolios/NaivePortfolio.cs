@@ -85,19 +85,19 @@ namespace Hermés.Core
                                         select datafeed.CurrentPrice(posHolder.Ticker, 
                                                                      selectKind(posHolder))
                                             into datafeedPrice
-                                            where datafeedPrice.HasValue
+                                            where datafeedPrice.Close.HasValue
                                             select datafeedPrice);
 
                     var prices = (from datafeed in DataFeeds
                                   let kind = PriceKind.Unspecified
                                   select datafeed.CurrentPrice(posHolder.Ticker, kind)
                                       into datafeedPrice
-                                      where datafeedPrice.HasValue
+                                      where datafeedPrice.Close.HasValue
                                       select datafeedPrice);
 
                     var price = pricesBidAsk.Concat(prices).FirstOrDefault();
-                    if (price.HasValue) 
-                        priceCache.Add(position.Ticker, price.Value);
+                    if (price.Close.HasValue) 
+                        priceCache.Add(position.Ticker, price.Close.Value);
                     else
                         throw new OperationCanceledException(
                             string.Format("Current price not found for ticker {0}", position.Ticker));

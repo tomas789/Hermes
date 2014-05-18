@@ -1,27 +1,36 @@
 ﻿using System;
-using Hermés.Core.Common;
-using Hermés.Core.Events;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Hermés.Core;
+using Hermés.Core.Common;
+using Hermés.Core.Events;
+
 
 namespace Hermés.Core.Test
 {
     class DataFeedMock : DataFeed
     {
-        private readonly double _constantPrice;
+        private readonly PriceGroup _constantPriceGroup;
 
         public DataFeedMock(double constantPrice)
         {
-            _constantPrice = constantPrice;
+            _constantPriceGroup = new PriceGroup()
+            {
+                Open = constantPrice,
+                High = constantPrice,
+                Low = constantPrice,
+                Close = constantPrice,
+                Volume = 0,
+                OpenInterenst = 0
+            };
         }
 
         public override void Dispose()
         {
         }
 
-        public override double? CurrentPrice(Ticker ticker, PriceKind priceKind)
+        public override PriceGroup CurrentPrice(Ticker ticker, PriceKind priceKind)
         {
-            return _constantPrice;
+            return _constantPriceGroup;
         }
     }
 
