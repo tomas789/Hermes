@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Hermés.Core
+namespace Hermés.Core.Common
 {
-    interface IDataFeed : IDisposable
+    class DoubleInitializationException : Exception
     {
     }
 }

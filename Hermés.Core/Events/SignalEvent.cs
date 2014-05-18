@@ -11,6 +11,9 @@ namespace Hermés.Core.Events
         Buy, Sell, Hold
     }
 
+    /// <summary>
+    /// Signal geenrated by Strategy.
+    /// </summary>
     public class SignalEvent : Event
     {
         public readonly Ticker Ticker;

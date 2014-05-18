@@ -15,4 +15,9 @@ namespace Hermés.Core.Common
     {
         Buy, Sell
     }
+
+    public enum PriceKind
+    {
+        Bid, Ask, Unspecified
+    }
 }

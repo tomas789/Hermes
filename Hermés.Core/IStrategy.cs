@@ -10,6 +10,6 @@ namespace Hermés.Core
 {
     public interface IStrategy : IEventConsumer, IDisposable
     {
-        void Initialize(Portfolio portfolio);
+        void Initialize(Kernel kernel);
     }
 }

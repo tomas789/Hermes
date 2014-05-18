@@ -20,23 +20,51 @@ namespace Hermés.Core
     {
         #region Constructors
 
-        public Portfolio(Kernel kernel)
+        protected Portfolio()
         {
             Strategies = new StrategiesHelper(this);
-            Kernel = kernel;
+            DataFeeds = new DataFeedHelper(this);
+            Kernel = new Kernel();
         }
 
         #endregion
 
+
+        /// <summary>
+        /// Freeze current state and get ready to run simulation.
+        /// </summary>
+        /// <remarks>
+        /// Calling this function causes correct initialization of
+        /// associated parts like broker, strategies, datafeed and so on.
+        /// </remarks>
+        public void Initialize()
+        {
+            Strategies.Initialize(Kernel);
+            DataFeeds.Initialize(Kernel);
+            Broker.Initialize(Kernel);
+        }
+
+
         #region Prerequisities
 
-        public Kernel Kernel { get; protected set; }
+        public Kernel Kernel { get; private set; }
+
+        /// <summary>
+        /// Time of the latest event.
+        /// </summary>
+        public DateTime WallTime
+        {
+            get { return Kernel.WallTime; }
+            set { Kernel.WallTime = value;  }
+        }
 
         /// <summary>
         /// List of strategies that are registered to be potentially
         /// used by the strategy.
         /// </summary>
         public StrategiesHelper Strategies { get; private set; }
+
+        public DataFeedHelper DataFeeds { get; private set; }
 
 
         /// <summary>
@@ -52,12 +80,12 @@ namespace Hermés.Core
         /// Evaluate overall value of portfolio.
         /// <see cref="Portfolio.GetPortfolioValue()"/> for more details.
         /// </summary>
+        /// <remarks>
+        /// Deprecated: Use GetPortfolioValue instead.
+        /// </remarks>
         public double PortfolioValue
         {
-            get
-            {
-                return GetPortfolioValue();
-            }
+            get { return GetPortfolioValue(); }
         }
 
         #endregion
@@ -70,10 +98,9 @@ namespace Hermés.Core
         protected abstract double GetPortfolioValue();
 
         /// <summary>
-        /// List of all positions taken by portfolio.
+        /// Set of all positions executed by portfolio.
         /// </summary>
-        protected Dictionary<Ticker, Position> Positions = 
-            new Dictionary<Ticker, Position>();
+        protected HashSet<Position> Positions = new HashSet<Position>();
 
         public readonly Dictionary<Ticker, TickerInfo> TickerInfos = 
             new Dictionary<Ticker, TickerInfo>(); 
@@ -86,6 +113,9 @@ namespace Hermés.Core
         /// <param name="e">Event.</param>
         public void DispatchEvent(Event e)
         {
+            if (e.Time > WallTime)
+                Kernel.WallTime = e.Time;
+
             var ts = new TypeSwitch()
                 .Case((FillEvent x) => DispatchConcrete(x))
                 .Case((MarketEvent x) => DispatchConcrete(x))
@@ -101,8 +131,6 @@ namespace Hermés.Core
         public abstract void DispatchConcrete(SignalEvent e);
 
         #endregion
-
-        
     }
 
     #endregion
@@ -115,7 +143,9 @@ namespace Hermés.Core
     /// </summary>
     public class StrategiesHelper
     {
-        private readonly List<IStrategy> _strategies = 
+        private bool _initialized = false;
+
+        private readonly List<IStrategy> _strategies =
             new List<IStrategy>();
 
         private readonly Portfolio _portfolio;
@@ -125,6 +155,16 @@ namespace Hermés.Core
             _portfolio = portfolio;
         }
 
+        internal void Initialize(Kernel kernel)
+        {
+            if (_initialized)
+                throw new DoubleInitializationException();
+
+            _initialized = true;
+            foreach (var strategy in _strategies)
+                strategy.Initialize(kernel);
+        }
+
         public IStrategy this[int i]
         {
             get { return _strategies[i]; }
@@ -132,8 +172,68 @@ namespace Hermés.Core
 
         public void AddStrategy(IStrategy strategy)
         {
-            strategy.Initialize(_portfolio);
+            if (_initialized)
+                throw new InvalidOperationException(
+                    "Trying to add strategy after initialization.");
+
             _strategies.Add(strategy);
+        }
+    }
+
+    #endregion
+
+    #region DataFeedHelper
+
+    /// <summary>
+    /// This helper allows to have indexer on member with 
+    /// comfortable syntax.
+    /// </summary>
+    public class DataFeedHelper : IEnumerable<DataFeed>
+    {
+        private bool _initialized = false;
+
+        private readonly List<DataFeed> _dataFeeds =
+            new List<DataFeed>();
+
+        private readonly Portfolio _portfolio;
+
+        public DataFeedHelper(Portfolio portfolio)
+        {
+            _portfolio = portfolio;
+        }
+
+        internal void Initialize(Kernel kernel)
+        {
+            if (_initialized)
+                throw new DoubleInitializationException();
+
+            _initialized = true;
+            foreach (var strategy in _dataFeeds)
+                strategy.Initialize(kernel);
+        }
+
+        public DataFeed this[int i]
+        {
+            get { return _dataFeeds[i]; }
+        }
+
+        public void AddDataFeed(DataFeed dataFeed)
+        {
+            if (_initialized)
+                throw new InvalidOperationException(
+                    "Trying to add strategy after initialization.");
+
+            _dataFeeds.Add(dataFeed);
+        }
+
+        public IEnumerator<DataFeed> GetEnumerator()
+        {
+            return _dataFeeds.GetEnumerator();
+        }
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        {
+            return _dataFeeds.GetEnumerator();
         }
     }
 
