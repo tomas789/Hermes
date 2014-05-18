@@ -56,6 +56,7 @@
     <Compile Include="IEventConsumer.cs" />
     <Compile Include="IStrategy.cs" />
     <Compile Include="Kernel.cs" />
+    <Compile Include="Strategies\NaiveStrategy.cs" />
     <Compile Include="Portfolios\NaivePortfolio.cs" />
     <Compile Include="Portfolio.cs" />
     <Compile Include="Position.cs" />
