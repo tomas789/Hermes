@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Hermés.Core
 {
-    public class Ticker
+    public class Ticker : IEquatable<Ticker>
     {
         public string Name;
         public string Exchange;
@@ -22,6 +18,14 @@ namespace Hermés.Core
             Exchange = exchange;
             Month = month;
             Year = year;
+        }
+
+        public bool Equals(Ticker other)
+        {
+            return Name == other.Name &&
+                   Exchange == other.Exchange &&
+                   Month == other.Month &&
+                   Year == other.Year;
         }
     }
 }
