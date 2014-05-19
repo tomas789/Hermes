@@ -33,7 +33,6 @@ namespace Hermés.Core.DataFeeds
             Count = 0;
         }
 
-
         public void Initialize(string adressOfFile, Kernel kernel)
         {
             if (_initialized)
@@ -45,14 +44,23 @@ namespace Hermés.Core.DataFeeds
             _initialized = true;
         }
 
-        // missing check for first body line validation of time ...
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <remarks>
+        /// TODO: check for first body line validation of time
+        /// </remarks>
+        /// <param name="adressOfFile"></param>
+        /// 
         private void GetData(string adressOfFile)
         {
+            // TODO: Dispose
             var file = new StreamReader(adressOfFile);
             string line;
 
             // header
             {
+                // TODO: 
                 while ((line = file.ReadLine()) != null)
                 {
                     if (! HeaderCheck(line))
@@ -60,19 +68,12 @@ namespace Hermés.Core.DataFeeds
                 }
 
                 if (line == null)
-                {
-                    //end of file -> empty file / file consisted only of header
-                    throw new ImpossibleException();
-                }
+                    throw new InvalidDataException();
 
                 // constrains for working datafeed
                 string[] vitalData = { "COLUMNS", "INTERVAL", "EXCHANGE" };
-                foreach (string w in vitalData)
-                    if (!_header.ContainsKey(_header[w]))
-                    {
-                        // throw exception UNKNOWN/UNSPECIFIED VITAL DATA
-                        throw new ImpossibleException();
-                    }
+                if (vitalData.Any(w => !_header.ContainsKey(_header[w])))
+                    throw new InvalidDataException();
 
                 // all possible deliminators for column names 
                 char[] deliminators = { ',' };
@@ -83,13 +84,12 @@ namespace Hermés.Core.DataFeeds
 
             // header additional setting
             {
-                if (!_header.ContainsKey(_header["TIMEZONE_OFFSET"]))
-                    _timeZoneOffset = 0;
-                else
-                    _timeZoneOffset = Convert.ToInt32(_header["TIMEZONE_OFFSET"]);
+                _timeZoneOffset = !_header.ContainsKey(_header["TIMEZONE_OFFSET"]) ? 
+                    0 : Convert.ToInt32(_header["TIMEZONE_OFFSET"]);
+
                 _interval = Convert.ToDouble(_header["INTERVAL"]);
             }
-            
+
             // body
             {
                 // all possible deliminators for columns 
@@ -191,6 +191,8 @@ namespace Hermés.Core.DataFeeds
             return dt;
         }
 
+        // TODO: Deliminator :)
+        // TODO: Consider using string.Split
         // header must be set as part=VALUE, where = is just some deliminator
         private bool HeaderSetter(string line, string part)
         {
@@ -218,7 +220,15 @@ namespace Hermés.Core.DataFeeds
         }
 
 
-        // here have to be specified all part of header ... sad but true
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <remarks>
+        /// here have to be specified all part of header ... sad but true
+        /// TODO: Convert to single big conjunction.
+        /// </remarks>
+        /// <param name="line"></param>
+        /// <returns></returns>
         private bool HeaderCheck(string line)
         {
             if (HeaderSetter(line, "EXCHANGE"))
@@ -235,14 +245,16 @@ namespace Hermés.Core.DataFeeds
                 return true;
             if (HeaderSetter(line, "TIMEZONE_OFFSET"))
                 return true;
-
+            
             return false;
         }
 
-
-
-
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <remarks>
+        /// TODO: Remove NotImplementedException if not required
+        /// </remarks>
         public override void Dispose()
         {
             throw new NotImplementedException();
