@@ -29,7 +29,6 @@ namespace Hermés.Core
 
         #endregion
 
-
         /// <summary>
         /// Freeze current state and get ready to run simulation.
         /// </summary>
@@ -43,7 +42,6 @@ namespace Hermés.Core
             DataFeeds.Initialize(Kernel);
             Broker.Initialize(Kernel);
         }
-
 
         #region Prerequisities
 

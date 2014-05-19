@@ -23,6 +23,8 @@ namespace Hermés.Core.DataFeeds
         private readonly List<MarketEvent> _data = 
             new List<MarketEvent>();
 
+        private Ticker _ticker;
+
         private int _timeZoneOffset;
         private double _interval;
 
@@ -147,7 +149,7 @@ namespace Hermés.Core.DataFeeds
 
             var priceGroup = PriceGroupBuilder(parsedLine);
 
-            var marketEvent = new MarketEvent(time, priceGroup);
+            var marketEvent = new MarketEvent(_ticker, time, priceGroup);
             return marketEvent;
         }
 
@@ -261,6 +263,11 @@ namespace Hermés.Core.DataFeeds
         }
 
         public override PriceGroup CurrentPrice(Ticker ticker, PriceKind priceKind)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override PriceGroup GetHistoricalPriceGroup(int lookbackPeriod)
         {
             throw new NotImplementedException();
         }

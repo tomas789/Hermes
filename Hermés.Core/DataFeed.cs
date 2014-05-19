@@ -41,5 +41,7 @@ namespace Hermés.Core
         /// <param name="priceKind">Kind of price.</param>
         /// <returns>Current price group.</returns>
         public abstract PriceGroup CurrentPrice(Ticker ticker, PriceKind priceKind);
+
+        public abstract PriceGroup GetHistoricalPriceGroup(int lookbackPeriod);
     }
 }

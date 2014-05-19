@@ -18,9 +18,6 @@ namespace Hermés.Core.Portfolios
     /// </remarks>
     public class NaivePortfolio : Portfolio
     {
-        private readonly List<FillEvent> _fillEvents =
-            new List<FillEvent>();
-
         private readonly double _initialCapital;
 
         public NaivePortfolio(double initialCapital)
@@ -104,7 +101,7 @@ namespace Hermés.Core.Portfolios
                                       select datafeedPrice);
 
                     var price = pricesBidAsk.Concat(prices).FirstOrDefault();
-                    if (price.Close.HasValue) 
+                    if (price != null && price.Close.HasValue) 
                         priceCache.Add(position.Ticker, price.Close.Value);
                     else
                         throw new OperationCanceledException(

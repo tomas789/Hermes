@@ -46,7 +46,8 @@ a1395086400,16247.22,16270.34,16066.37,16066.37,88926593
 ");
             }
 
-            var dataFeed = new YahooDataFeed(fileName);
+            //var ticker = new Ticker("RUT", "CME", 1, 2000);
+            //var dataFeed = new YahooDataFeed(fileName, ticker);
 
             File.Delete(fileName);
         }
