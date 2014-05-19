@@ -33,7 +33,6 @@ namespace Hermés.Core.DataFeeds
             Count = 0;
         }
 
-
         public void Initialize(string adressOfFile, Kernel kernel)
         {
             if (_initialized)
@@ -52,6 +51,7 @@ namespace Hermés.Core.DataFeeds
         /// TODO: check for first body line validation of time
         /// </remarks>
         /// <param name="adressOfFile"></param>
+        /// 
         private void GetData(string adressOfFile)
         {
             // TODO: Dispose
@@ -245,7 +245,7 @@ namespace Hermés.Core.DataFeeds
                 return true;
             if (HeaderSetter(line, "TIMEZONE_OFFSET"))
                 return true;
-
+            
             return false;
         }
 
