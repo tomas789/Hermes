@@ -32,6 +32,11 @@ namespace Hermés.Core.Test
         {
             return _constantPriceGroup;
         }
+
+        public override PriceGroup GetHistoricalPriceGroup(int lookbackPeriod)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     [TestClass]

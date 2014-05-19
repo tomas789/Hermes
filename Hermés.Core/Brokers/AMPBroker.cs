@@ -8,7 +8,7 @@ using Hermés.Core.Events;
 
 namespace Hermés.Core.Brokers
 {
-    class AMPBroker : IBroker
+    public class AMPBroker : IBroker
     {
         private Kernel _kernel = null;
 
