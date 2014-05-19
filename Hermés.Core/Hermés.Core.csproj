@@ -46,6 +46,7 @@
     <Compile Include="Common\PriceGroup.cs" />
     <Compile Include="Common\PriorityQueue.cs" />
     <Compile Include="Common\TypeSwitch.cs" />
+    <Compile Include="DataFeeds\YahooDataFeed.cs" />
     <Compile Include="Event.cs" />
     <Compile Include="Events\FillEvent.cs" />
     <Compile Include="Events\MarketEvent.cs" />
@@ -64,9 +65,7 @@
     <Compile Include="Ticker.cs" />
     <Compile Include="TickerInfo.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="DataFeeds\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
