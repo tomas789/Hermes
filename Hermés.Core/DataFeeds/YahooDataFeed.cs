@@ -4,6 +4,7 @@ using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,6 +14,8 @@ using Hermés.Core.Common;
 namespace Hermés.Core.DataFeeds
 {
     
+    // TODO: GetData(TextReader), IsValidNumber(string)
+    // TODO: Tests
     class YahooDataFeed : DataFeed
     {
         private bool _initialized = false;
@@ -20,101 +23,119 @@ namespace Hermés.Core.DataFeeds
             new Dictionary<string, string>();
         private readonly Dictionary<string,int> _dataFormat =
             new Dictionary<string, int>();
-        private readonly List<MarketEvent> _data = 
-            new List<MarketEvent>();
+        private readonly SortedDictionary<DateTime,MarketEvent> _data = 
+            new SortedDictionary<DateTime, MarketEvent>();
+        private string _fileName;
+        private TextReader _textReader;
+        private Ticker _ticker;
 
         private int _timeZoneOffset;
         private double _interval;
 
-        public ulong Count { get; set; }
+        public int Count { get; set; }
 
-        YahooDataFeed()
+
+        public YahooDataFeed(Ticker ticker, string fileName)
         {
+            _ticker = ticker;
+            _fileName = fileName;
             Count = 0;
         }
 
-        public void Initialize(string adressOfFile, Kernel kernel)
+
+        public YahooDataFeed(Ticker ticker, TextReader textReader)
+        {
+            _ticker = ticker;
+            _textReader = textReader;
+            Count = 0;
+        }
+
+
+        public YahooDataFeed(Ticker ticker)
+        {
+            _ticker = ticker;
+            Count = 0;
+        }
+        
+
+        public void Initialize(Kernel kernel)
         {
             if (_initialized)
                 throw new DoubleInitializationException();
+            _initialized = true;
 
             base.Initialize(kernel);
 
-            GetData(adressOfFile);
-            _initialized = true;
+            if (_fileName != null)
+                GetData(_fileName);
+            else 
+                GetData(_textReader);
         }
+
+
+        private void GetData(string fileName)
+        {
+            using (var file = new StreamReader(fileName))
+            {
+                string line = null;
+
+                ReadHeader(ref line, file);
+
+                HeaderAdditionalSetting();
+
+                ReadBody(ref line, file);
+            }
+        }
+
+        // TODO: make it better
+        private void GetData(TextReader textReader)
+        {
+            string line = null;
+
+            ReadHeader(ref line, (StreamReader)textReader);
+
+            HeaderAdditionalSetting();
+
+            ReadBody(ref line, (StreamReader)textReader);
+        }
+
 
         /// <summary>
-        /// 
+        /// Read header lines from file
         /// </summary>
-        /// <remarks>
-        /// TODO: check for first body line validation of time
-        /// </remarks>
-        /// <param name="adressOfFile"></param>
-        /// 
-        private void GetData(string adressOfFile)
+        private void ReadHeader(ref string line, StreamReader file)
         {
-            // TODO: Dispose
-            var file = new StreamReader(adressOfFile);
-            string line;
-
-            // header
+            while ((line = file.ReadLine()) != null)
             {
-                // TODO: 
-                while ((line = file.ReadLine()) != null)
-                {
-                    if (! HeaderCheck(line))
-                        break;
-                }
-
-                if (line == null)
-                    throw new InvalidDataException();
-
-                // constrains for working datafeed
-                string[] vitalData = { "COLUMNS", "INTERVAL", "EXCHANGE" };
-                if (vitalData.Any(w => !_header.ContainsKey(_header[w])))
-                    throw new InvalidDataException();
-
-                // all possible deliminators for column names 
-                char[] deliminators = { ',' };
-                var words = (_header["COLUMNS"]).Split(deliminators);
-                for (var i = 0; i < words.Length; ++i)
-                    _dataFormat.Add(words[i],i);
+                if (!HeaderCheck(line))
+                    break;
             }
 
-            // header additional setting
-            {
-                _timeZoneOffset = !_header.ContainsKey(_header["TIMEZONE_OFFSET"]) ? 
-                    0 : Convert.ToInt32(_header["TIMEZONE_OFFSET"]);
+            if (line == null)
+                throw new InvalidDataException();
 
-                _interval = Convert.ToDouble(_header["INTERVAL"]);
-            }
+            // constrains for working datafeed
+            string[] vitalData = { "COLUMNS", "INTERVAL", "EXCHANGE" };
+            if (vitalData.Any(w => !_header.ContainsKey(_header[w])))
+                throw new InvalidDataException();
 
-            // body
-            {
-                // all possible deliminators for columns 
-                char[] deliminators = { ',' };
-                var dt = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
-
-                // line comes with first value from trying to get header
-                while (line != null)
-                {
-                    ++Count;
-                    // empty line should not occur in yahoo data feed
-                    if (line.Length == 0)
-                        throw new ImpossibleException();
-
-                    var fields = line.Split(deliminators);
-                    var marketEvent = BodyLineSetter(fields,dt);
-                    _data.Add(marketEvent);
-
-                    line = file.ReadLine();
-                }
-            }
-
+            // all possible deliminators for column names 
+            char[] delimiters = { ',' };
+            var words = (_header["COLUMNS"]).Split(delimiters);
+            for (var i = 0; i < words.Length; ++i)
+                _dataFormat.Add(words[i], i);
         }
 
-        private MarketEvent BodyLineSetter(string[] parsedLine, DateTime dt)
+        private void HeaderAdditionalSetting()
+        {
+            _timeZoneOffset = !_header.ContainsKey(_header["TIMEZONE_OFFSET"]) ?
+                0 : Convert.ToInt32(_header["TIMEZONE_OFFSET"]);
+
+            _interval = Convert.ToDouble(_header["INTERVAL"]);
+        }
+
+        private MarketEvent BodyLineSetter(string[] parsedLine, DateTime dt, 
+                                           ref bool timeSet)
         {
             if (parsedLine.Length != _dataFormat.Count)
                 throw new ImpossibleException();
@@ -127,9 +148,11 @@ namespace Hermés.Core.DataFeeds
 
             if (timeString[0] == 'a')
             {
+                if (! timeSet)
+                    timeSet = true;
                 if (timeString.Length < 2)
                     throw new ImpossibleException(); // wrong data file
-                string pureTime = timeString.Substring(1);
+                var pureTime = timeString.Substring(1);
                 if (! IsValidNumber(pureTime))
                     throw new ImpossibleException(); // wrong data file
                 dt = UnixTimeStampToDateTime(
@@ -139,6 +162,8 @@ namespace Hermés.Core.DataFeeds
             }
             else 
             {
+                if (! timeSet)
+                    throw new ImpossibleException(); // not time set so far
                 if (! IsValidNumber(timeString))
                     throw new ImpossibleException(); // wrong data file
                 time = dt.AddSeconds(
@@ -149,6 +174,30 @@ namespace Hermés.Core.DataFeeds
 
             var marketEvent = new MarketEvent(time, priceGroup);
             return marketEvent;
+        }
+
+        private void ReadBody(ref string line, StreamReader file)
+        {
+            var timeSet = false;
+
+            // all possible deliminators for columns 
+            char[] delimiters = { ',' };
+            var dt = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+
+            // line comes with first value from trying to get header
+            while (line != null)
+            {
+                ++Count;
+                // empty line should not occur in yahoo data feed
+                if (line.Length == 0)
+                    throw new ImpossibleException();
+
+                var fields = line.Split(delimiters);
+                var marketEvent = BodyLineSetter(fields, dt, ref timeSet);
+                _data.Add(marketEvent.Time, marketEvent);
+
+                line = file.ReadLine();
+            }
         }
 
         private PriceGroup PriceGroupBuilder(string[] parsedLine)
@@ -168,17 +217,19 @@ namespace Hermés.Core.DataFeeds
 
         private void PriceGroupSetter(string[] parsedLine, string part, ref double? obj)
         {
-            if (_dataFormat.ContainsKey("part"))
+            if (_dataFormat.ContainsKey(part))
             {
-                var res = parsedLine[_dataFormat["part"]];
+                var res = parsedLine[_dataFormat[part]];
                 if (IsValidNumber(res))
                     obj = Convert.ToDouble(res);
+                else 
+                    throw new ImpossibleException();
             }
             else
                 obj = null;
         }
 
-        // not implemented yet
+        // TODO: implement method
         private bool IsValidNumber(string number)
         {
             return true;
@@ -191,9 +242,8 @@ namespace Hermés.Core.DataFeeds
             return dt;
         }
 
-        // TODO: Deliminator :)
-        // TODO: Consider using string.Split
-        // header must be set as part=VALUE, where = is just some deliminator
+
+        // header must be set as part=VALUE, where = is just some delimiter
         private bool HeaderSetter(string line, string part)
         {
             // check, if its possible to be this part of header
@@ -211,8 +261,7 @@ namespace Hermés.Core.DataFeeds
                 return true;
             }
 
-            // i will parse string as part:deliminator:rest, 
-            // where deliminator is any character and ':' are missing
+            // i will split string as part, one char, rest 
             var rest = line.Substring(part.Length + 1);
             
             _header.Add(part,rest);
@@ -220,15 +269,6 @@ namespace Hermés.Core.DataFeeds
         }
 
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <remarks>
-        /// here have to be specified all part of header ... sad but true
-        /// TODO: Convert to single big conjunction.
-        /// </remarks>
-        /// <param name="line"></param>
-        /// <returns></returns>
         private bool HeaderCheck(string line)
         {
             if (HeaderSetter(line, "EXCHANGE"))
@@ -249,20 +289,19 @@ namespace Hermés.Core.DataFeeds
             return false;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <remarks>
-        /// TODO: Remove NotImplementedException if not required
-        /// </remarks>
+
         public override void Dispose()
         {
-            throw new NotImplementedException();
         }
 
         public override PriceGroup CurrentPrice(Ticker ticker, PriceKind priceKind)
         {
-            throw new NotImplementedException();
+            if (PriceKind.Unspecified != priceKind)
+                return null;
+            if (ticker.Equals(_ticker))
+                if (_data.ContainsKey(base.Kernel.WallTime))
+                    return _data[base.Kernel.WallTime].Price;
+            return null;
         }
     }
 }
