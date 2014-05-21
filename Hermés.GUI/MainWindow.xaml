@@ -1,0 +1,16 @@
+﻿<Window x:Class="Hermés.GUI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="MainWindow" Height="400" Width="400">
+    <Grid>
+        <StackPanel>
+
+            <Button Name="Pick_button" Click="Pick_button_OnClick">Pick File</Button>
+            <TextBox Name="Pick_textbox" Text="File not picked yet!"/>
+            <Button Name="Initialize_button" Click="Initialize_button_OnClick">Initialize</Button>
+            <TextBox Name="Initialize_textbox" Text="File not picked yet!" />
+            <Button Name="Run_button" Click="Run_button_OnClick">Run</Button>
+            <TextBox Name="Run_textbox" Text="File not picked yet!"/>
+        </StackPanel>
+    </Grid>
+</Window>
