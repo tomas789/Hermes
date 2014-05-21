@@ -17,27 +17,22 @@ namespace Hermés.Core.DataFeeds
             new SortedDictionary<DateTime, PriceGroup>();
         private readonly string _fileName;
         private readonly TextReader _inputFileReader;
-        private readonly Ticker _ticker;
+        private readonly DataFeed _market;
 
         public int Count { 
             get { return _data.Count; }
         }
 
-        public GoogleDataFeed(Ticker ticker, string fileName)
-            : this(ticker)
+        public GoogleDataFeed(string fileName, double pointPrice)
+            : base(pointPrice)
         {
             _fileName = fileName;
         }
 
-        public GoogleDataFeed(Ticker ticker, TextReader textReader)
-            : this(ticker)
+        public GoogleDataFeed(TextReader textReader, double pointPrice)
+            : base(pointPrice)
         {
             _inputFileReader = textReader;
-        }
-
-        public GoogleDataFeed(Ticker ticker)
-        {
-            _ticker = ticker;
         }
         
         public override void Initialize(Kernel kernel)
@@ -219,7 +214,7 @@ namespace Hermés.Core.DataFeeds
         /// </summary>
         private void EmitEvents()
         {
-            var events = _data.Select(dataItem => new MarketEvent(_ticker, dataItem.Key, dataItem.Value));
+            var events = _data.Select(dataItem => new MarketEvent(_market, dataItem.Key, dataItem.Value));
             foreach (var ev in events)
                 Kernel.AddEvent(ev);
         }
@@ -228,9 +223,9 @@ namespace Hermés.Core.DataFeeds
         {
         }
 
-        public override PriceGroup CurrentPrice(Ticker ticker, PriceKind priceKind)
+        public override PriceGroup CurrentPrice(DataFeed market, PriceKind priceKind)
         {
-            if (PriceKind.Unspecified != priceKind || !ticker.Equals(_ticker))
+            if (PriceKind.Unspecified != priceKind || !market.Equals(_market))
                 return null;
 
             PriceGroup group;
