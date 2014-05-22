@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -12,7 +13,8 @@ namespace Hermés.Core.DataFeeds
 {
     public class GoogleDataFeed : DataFeed
     {
-        private bool _initialized = false;
+        
+
         private readonly SortedDictionary<DateTime, PriceGroup> _data = 
             new SortedDictionary<DateTime, PriceGroup>();
         private readonly string _fileName;
@@ -36,9 +38,6 @@ namespace Hermés.Core.DataFeeds
         
         public override void Initialize(Kernel kernel)
         {
-            if (_initialized)
-                throw new DoubleInitializationException();
-            _initialized = true;
             base.Initialize(kernel);
 
             if (_fileName == null && _inputFileReader == null)
