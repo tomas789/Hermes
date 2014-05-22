@@ -1,6 +1,8 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Hermés.Core;
+using System.Threading;
+using System.Threading.Tasks;
 using Hermés.Core.Common;
 using Hermés.Core.Events;
 using Hermés.Core.Portfolios;
@@ -70,7 +72,11 @@ namespace Hermés.Core.Test
             kernel.AddEvent(new FillEvent(datafeed, TradeDirection.Buy, 100, 100, 0, 1));
 
             kernel.RegisterEventConsumer(portfolio);
-            kernel.Run();
+            var task = new Task(kernel.Run);
+            task.Start();
+
+            Thread.Sleep(50);
+            kernel.StopSimulation();
 
             var expectedValue = initial + 3 * 200 * pointPrice;
             Assert.AreEqual(expectedValue, portfolio.PortfolioValue);
@@ -93,7 +99,11 @@ namespace Hermés.Core.Test
             kernel.AddEvent(new FillEvent(datafeed, TradeDirection.Sell, 100, 100, 0, 1));
 
             kernel.RegisterEventConsumer(portfolio);
-            kernel.Run();
+            var task = new Task(kernel.Run);
+            task.Start();
+
+            Thread.Sleep(50);
+            kernel.StopSimulation();
 
             var expectedValue = initial - 3 * 200 * pointPrice;
             Assert.AreEqual(expectedValue, portfolio.PortfolioValue);

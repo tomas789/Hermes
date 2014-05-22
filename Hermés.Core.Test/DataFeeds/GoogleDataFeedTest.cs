@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Hermés.Core.DataFeeds;
 using Hermés.Core.Brokers;
+using Hermés.Core;
 
 namespace Hermés.Core.Test.DataFeeds
 {
