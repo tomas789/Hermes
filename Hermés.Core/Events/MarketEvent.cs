@@ -16,7 +16,7 @@ namespace Hermés.Core.Events
 
         public PriceGroup Price;
 
-        public MarketEvent(DataFeed market, DateTime time, PriceGroup price) 
+        public MarketEvent(DataFeed market, DateTime time, PriceGroup price)
             : base(time)
         {
             Market = market;

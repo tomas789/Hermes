@@ -38,6 +38,7 @@ namespace Hermés.Core
         /// </remarks>
         public void Initialize()
         {
+            Kernel.RegisterEventConsumer(this);
             Strategies.Initialize(Kernel);
             DataFeeds.Initialize(Kernel);
             Broker.Initialize(Kernel);

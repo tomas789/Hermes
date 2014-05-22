@@ -12,11 +12,11 @@ namespace Hermés.Core
     /// </summary>
     public abstract class Event : IComparable<Event>, IEquatable<Event>
     {
-        public DateTime Time { private set; get; }
+        public DateTime Time { protected set; get; }
 
         protected Event(DateTime time)
         {
-            this.Time = Time;
+            Time = time;
         }
 
         public int CompareTo(Event other)

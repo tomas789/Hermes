@@ -14,7 +14,7 @@
 
             <Button Name="Pick_button" Click="Pick_button_OnClick">Pick File</Button>
             <TextBox Name="Pick_textbox" Text="File not picked yet!"/>
-            <Button Name="Initialize_button" Click="Initialize_button_OnClick">Initialize</Button>
+            <Button Name="Initialize_button" IsEnabled="{Binding Path=IsEverythingLoaded}" Click="Initialize_button_OnClick">Initialize</Button>
             <TextBox Name="Initialize_textbox" Text="File not picked yet!" />
             <Button Name="Run_button" Click="Run_button_OnClick">Run</Button>
             <TextBox Name="Run_textbox" Text="File not picked yet!"/>
@@ -22,6 +22,7 @@
             <StackPanel Orientation="Horizontal">
                 <Button Name="StepButton" Content="Step" Click="StepButton_onClick" />
                 <Button Name="ContinueButton" Content="Continue" />
+                <Button Name="StopButton" Content="Stop" Click="StopButton_OnClick" />
                 <Label Name="EventCounter" Content="Events: 0" />
             </StackPanel>
 
