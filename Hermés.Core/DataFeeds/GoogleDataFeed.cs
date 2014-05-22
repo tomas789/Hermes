@@ -212,9 +212,12 @@ namespace Hermés.Core.DataFeeds
         /// </summary>
         private void EmitEvents()
         {
-            var events = _data.Select(dataItem => new MarketEvent(this, dataItem.Key, dataItem.Value));
-            foreach (var ev in events)
+            foreach (var item in _data)
+            {
+                var ev = new MarketEvent(this, item.Key, item.Value);
                 Kernel.AddEvent(ev);
+
+            }
         }
 
         public override void Dispose()

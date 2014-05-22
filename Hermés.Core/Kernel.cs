@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Hermés.Core.Common;
 
@@ -23,6 +24,8 @@ namespace Hermés.Core
             new List<IEventConsumer>();
 
         public DateTime WallTime;
+
+        private bool _running = true;
 
         public EventPriorityQueue Events { get { return _events; } }
 
@@ -55,7 +58,21 @@ namespace Hermés.Core
         /// <param name="consumer">Event consumer to register</param>
         public void RegisterEventConsumer(IEventConsumer consumer)
         {
-            _eventConsumers.Add(consumer);
+            lock (_events)
+            {
+                Monitor.Pulse(_events);
+                _eventConsumers.Add(consumer);
+            }
+            
+        }
+
+        public void StopSimulation()
+        {
+            lock (_events)
+            {
+                _running = false;
+                Monitor.PulseAll(_events);
+            }
         }
 
         /// <summary>
@@ -72,8 +89,12 @@ namespace Hermés.Core
         /// </summary>
         private void Dispatcher()
         {
-            while (_events.Count != 0)
+            while (_running)
             {
+                if (_events.Count == 0)
+                    lock (_events)
+                        Monitor.Wait(_events);
+
                 DispatcherStep();
             }
         }
@@ -81,7 +102,7 @@ namespace Hermés.Core
         private void DispatcherStep()
         {
             if (_events.Count == 0)
-                throw new IndexOutOfRangeException("Empty event queue");
+                return;
 
             var ev = _events.Dequeue();
             foreach (var consumer in _eventConsumers)
