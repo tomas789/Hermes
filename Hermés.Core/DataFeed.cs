@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Hermés.Core.Common;
 
@@ -17,7 +19,22 @@ namespace Hermés.Core
     /// </remarks>
     public abstract class DataFeed : IDisposable
     {
+        protected bool Initialized = false;
         public Kernel Kernel;
+        public CultureInfo CultureInfo = new CultureInfo("en");
+
+        public CultureInfo getCultureInfo()
+        {
+            return CultureInfo;
+        }
+
+        public void setCultureInfo(CultureInfo newCultureInfo)
+        {
+            if (Initialized)
+                // cannot set CultureInfo after Initializing
+                throw new InvalidOperationException(); 
+            CultureInfo = newCultureInfo;
+        }
 
         public double PointPrice { get; private set; }
 
@@ -32,6 +49,10 @@ namespace Hermés.Core
         /// <param name="kernel"></param>
         public virtual void Initialize(Kernel kernel)
         {
+            if (Initialized)
+                throw new DoubleInitializationException();
+            Initialized = true;
+            System.Threading.Thread.CurrentThread.CurrentCulture = CultureInfo;
             Kernel = kernel;
         }
 
