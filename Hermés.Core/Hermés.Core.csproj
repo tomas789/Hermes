@@ -63,8 +63,6 @@
     <Compile Include="Position.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Strategies\MovingAverageCrossoverStrategy.cs" />
-    <Compile Include="Ticker.cs" />
-    <Compile Include="TickerInfo.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

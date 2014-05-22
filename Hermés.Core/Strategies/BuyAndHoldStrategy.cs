@@ -5,26 +5,54 @@ using System.Text;
 using System.Threading.Tasks;
 using Hermés.Core;
 using Hermés.Core.Events;
+using Hermés.Core.Common;
 
 namespace Hermés.Core.Strategies
 {
     class BuyAndHoldStrategy : IStrategy
     {
-        private readonly Ticker _ticker;
+        private readonly List<DataFeed> _dataFeeds;
+        private readonly HashSet<DataFeed> _generatedSignals = 
+            new HashSet<DataFeed>();
 
-        public BuyAndHoldStrategy(Ticker ticker)
+        public Kernel Kernel;
+        private bool _initialized = false;
+
+        public BuyAndHoldStrategy()
         {
-            _ticker = ticker;
+            _dataFeeds = new List<DataFeed>();
+        }
+
+        public BuyAndHoldStrategy(List<DataFeed> dataFeeds)
+        {
+            _dataFeeds = dataFeeds;
         }
 
         public void Initialize(Kernel kernel)
         {
-            var buyEvent = new SignalEvent(_ticker, SignalKind.Buy);
-            kernel.AddEvent(buyEvent);
+            if (_initialized)
+                throw new DoubleInitializationException();
+            _initialized = true;
+
+            Kernel = kernel;
         }
 
         public void DispatchEvent(Event e)
         {
+            var ts = new TypeSwitch()
+                .Case((MarketEvent x) => DispatchConcrete(x));
+
+            ts.Switch(e);
+        }
+
+        private void DispatchConcrete(MarketEvent ev)
+        {
+            if (_dataFeeds.Count != 0 && _generatedSignals.Contains(ev.Market)) 
+                return;
+
+            var signal = new SignalEvent(ev.Market, SignalKind.Buy);
+            Kernel.AddEvent(signal);
+            _generatedSignals.Add(ev.Market);
         }
 
         public void Dispose()

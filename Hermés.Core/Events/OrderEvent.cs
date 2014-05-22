@@ -12,15 +12,15 @@ namespace Hermés.Core.Events
     /// </summary>
     public class OrderEvent : Event
     {
-        public Ticker Ticker;
+        public DataFeed Market;
         public TradeDirection Direction;
         public OrderKind Kind;
         public double Price;
 
-        public OrderEvent(Ticker ticker, TradeDirection direction, OrderKind kind, double price = Double.NaN)
+        public OrderEvent(DataFeed market, TradeDirection direction, OrderKind kind, double price = Double.NaN)
             : base(DateTime.Now)
         {
-            Ticker = ticker;
+            Market = market;
             Direction = direction;
             Kind = kind;
             Price = price;

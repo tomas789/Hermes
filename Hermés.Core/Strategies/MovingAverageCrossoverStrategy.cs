@@ -10,13 +10,13 @@ namespace Hermés.Core.Strategies
 {
     class MovingAverageCrossoverStrategy : IStrategy
     {
-        private Ticker _ticker;
+        private DataFeed _market;
         private int _slowPeriod;
         private int _fastPeriod;
 
-        public MovingAverageCrossoverStrategy(Ticker ticker, int slowPeriod, int fastPeriod)
+        public MovingAverageCrossoverStrategy(DataFeed market, int slowPeriod, int fastPeriod)
         {
-            _ticker = ticker;
+            _market = market;
             _slowPeriod = slowPeriod;
             _fastPeriod = fastPeriod;
         }
