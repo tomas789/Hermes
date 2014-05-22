@@ -17,7 +17,6 @@ namespace Hermés.Core.DataFeeds
             new SortedDictionary<DateTime, PriceGroup>();
         private readonly string _fileName;
         private readonly TextReader _inputFileReader;
-        private readonly DataFeed _market;
 
         public int Count { 
             get { return _data.Count; }
@@ -214,7 +213,7 @@ namespace Hermés.Core.DataFeeds
         /// </summary>
         private void EmitEvents()
         {
-            var events = _data.Select(dataItem => new MarketEvent(_market, dataItem.Key, dataItem.Value));
+            var events = _data.Select(dataItem => new MarketEvent(this, dataItem.Key, dataItem.Value));
             foreach (var ev in events)
                 Kernel.AddEvent(ev);
         }
@@ -225,7 +224,7 @@ namespace Hermés.Core.DataFeeds
 
         public override PriceGroup CurrentPrice(DataFeed market, PriceKind priceKind)
         {
-            if (PriceKind.Unspecified != priceKind || !market.Equals(_market))
+            if (PriceKind.Unspecified != priceKind || !market.Equals(this))
                 return null;
 
             PriceGroup group;
