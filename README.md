@@ -14,24 +14,25 @@ strategií a portfolií pro obchodování na finančních trzích.
 Architektura je navržena tak, aby maximálne odrážela skutečnou situaci na
 finančních trzích. 
 
+```
   +--------+
   | Broker |
   +--------+
        |
-	   |
+       |
  +-----------+            +-----------+
  | Portfolio |------+-----| Strategie |
  +-----------+      |     +-----------+
                     |
-					|     +-----------+
-					+-----| Strategie |
-				    |     +-----------+
-					
-				   ...        ....
-
-                    |	  +-----------+
-					+-----| Strategie |
-						  +-----------+
+                    |     +-----------+
+                    +-----| Strategie |
+                    |     +-----------+
+                   ...        ....
+                    |     +-----------+
+                    +-----| Strategie |
+                          +-----------+
+						  
+```
 
 (Příklad užití)
 
