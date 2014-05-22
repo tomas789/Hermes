@@ -13,8 +13,8 @@ namespace Hermés.Core.Brokers
         private Kernel _kernel = null;
 
         public double DefaultCost = 2;
-        public readonly Dictionary<DataFeed, double> TradeCosts = 
-            new Dictionary<DataFeed, double>(); 
+        public readonly Dictionary<Ticker, double> TradeCosts = 
+            new Dictionary<Ticker, double>(); 
 
         public void Initialize(Kernel kernel)
         {
@@ -35,10 +35,10 @@ namespace Hermés.Core.Brokers
                 throw new ArgumentNullException();
 
             var cost = DefaultCost;
-            if (TradeCosts.ContainsKey(ev.Market))
-                cost = TradeCosts[ev.Market];
+            if (TradeCosts.ContainsKey(ev.Ticker))
+                cost = TradeCosts[ev.Ticker];
 
-            var fill = new FillEvent(ev.Market, ev.Direction, ev.Price, ev.Price, cost, 1);
+            var fill = new FillEvent(ev.Ticker, ev.Direction, ev.Price, ev.Price, cost, 1);
             _kernel.AddEvent(fill);
         }
 

@@ -16,20 +16,20 @@ namespace Hermés.Core.Events
     /// </summary>
     public class SignalEvent : Event
     {
-        public readonly DataFeed Market;
+        public readonly Ticker Ticker;
         public readonly SignalKind Kind;
 
-        public SignalEvent(DataFeed market, SignalKind kind) 
+        public SignalEvent(Ticker ticker, SignalKind kind) 
             : base(DateTime.Now)
         {
-            Market = market;
+            Ticker = ticker;
             Kind = kind;
         }
 
-        public SignalEvent(DateTime time, DataFeed market, SignalKind kind)
+        public SignalEvent(DateTime time, Ticker ticker, SignalKind kind)
             : base(time)
         {
-            Market = market;
+            Ticker = ticker;
             Kind = kind;
         }
     }

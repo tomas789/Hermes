@@ -12,14 +12,14 @@ namespace Hermés.Core
     /// </summary>
     public class Position
     {
-        public DataFeed Market;
+        public Ticker Ticker;
         public TradeDirection Direction;
         public double Price;
         public double Size;
 
-        public Position(DataFeed market, TradeDirection direction, double price, double size)
+        public Position(Ticker ticker, TradeDirection direction, double price, double size)
         {
-            Market = market;
+            Ticker = ticker;
             Direction = direction;
             Price = price;
             Size = size;

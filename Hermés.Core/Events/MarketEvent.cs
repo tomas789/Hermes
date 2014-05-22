@@ -12,14 +12,14 @@ namespace Hermés.Core.Events
     /// </summary>
     public class MarketEvent : Event
     {
-        public DataFeed Market;
+        public Ticker Ticker;
 
         public PriceGroup Price;
 
-        public MarketEvent(DataFeed market, DateTime time, PriceGroup price) 
+        public MarketEvent(Ticker ticker, DateTime time, PriceGroup price) 
             : base(time)
         {
-            Market = market;
+            Ticker = ticker;
             Price = price;
         }
     }

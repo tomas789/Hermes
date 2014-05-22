@@ -19,13 +19,6 @@ namespace Hermés.Core
     {
         public Kernel Kernel;
 
-        public double PointPrice { get; private set; }
-
-        protected DataFeed(double pointPrice)
-        {
-            PointPrice = pointPrice;
-        }
-
         /// <summary>
         /// Initialize all resources and freeze inner state if any.
         /// </summary>
@@ -44,10 +37,10 @@ namespace Hermés.Core
         /// Returns <value>null</value> if current DataFeed
         /// doesn't have this information.
         /// </remarks>
-        /// <param name="market">Ticker to get price of.</param>
+        /// <param name="ticker">Ticker to get price of.</param>
         /// <param name="priceKind">Kind of price.</param>
         /// <returns>Current price group.</returns>
-        public abstract PriceGroup CurrentPrice(DataFeed market, PriceKind priceKind);
+        public abstract PriceGroup CurrentPrice(Ticker ticker, PriceKind priceKind);
 
         public abstract PriceGroup GetHistoricalPriceGroup(int lookbackPeriod);
     }

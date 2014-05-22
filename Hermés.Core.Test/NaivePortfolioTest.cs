@@ -11,8 +11,7 @@ namespace Hermés.Core.Test
     {
         private readonly PriceGroup _constantPriceGroup;
 
-        public DataFeedMock(double constantPrice, double pointPrice)
-            : base(pointPrice)
+        public DataFeedMock(double constantPrice)
         {
             _constantPriceGroup = new PriceGroup()
             {
@@ -29,7 +28,7 @@ namespace Hermés.Core.Test
         {
         }
 
-        public override PriceGroup CurrentPrice(DataFeed market, PriceKind priceKind)
+        public override PriceGroup CurrentPrice(Ticker ticker, PriceKind priceKind)
         {
             return _constantPriceGroup;
         }
@@ -56,23 +55,29 @@ namespace Hermés.Core.Test
         [TestMethod]
         public void NaivePortfolio_SingleTickerPortfolioValue()
         {
-            var initial = 1000.0;
-            var pointPrice = 50.0;
+            const double initial = 1000.0;
             var portfolio = new NaivePortfolio(initial);
-            var datafeed = new DataFeedMock(300, pointPrice);
+            var datafeed = new DataFeedMock(300);
+            var ticker = new Ticker("RUT", "CME", 1, 2014);
+            var tickerInfo = new TickerInfo(ticker)
+            {
+                PointPrice = 50, 
+                TickSize = 1/4
+            };
 
             var kernel = portfolio.Kernel;
 
+            portfolio.TickerInfos.Add(ticker, tickerInfo);
             portfolio.DataFeeds.AddDataFeed(datafeed);
 
-            kernel.AddEvent(new FillEvent(datafeed, TradeDirection.Buy, 100, 100, 0, 1));
-            kernel.AddEvent(new FillEvent(datafeed, TradeDirection.Buy, 100, 100, 0, 1));
-            kernel.AddEvent(new FillEvent(datafeed, TradeDirection.Buy, 100, 100, 0, 1));
+            kernel.AddEvent(new FillEvent(ticker, TradeDirection.Buy, 100, 100, 0, 1));
+            kernel.AddEvent(new FillEvent(ticker, TradeDirection.Buy, 100, 100, 0, 1));
+            kernel.AddEvent(new FillEvent(ticker, TradeDirection.Buy, 100, 100, 0, 1));
 
             kernel.RegisterEventConsumer(portfolio);
             kernel.Run();
 
-            var expectedValue = initial + 3 * 200 * pointPrice;
+            var expectedValue = initial + 3*200*tickerInfo.PointPrice;
             Assert.AreEqual(expectedValue, portfolio.PortfolioValue);
         }
 
@@ -80,22 +85,28 @@ namespace Hermés.Core.Test
         public void NaivePortfolio_SingleTickerSellPortfolioValue()
         {
             const double initial = 1000.0;
-            var pointPrice = 50.0;
             var portfolio = new NaivePortfolio(initial);
-            var datafeed = new DataFeedMock(300, pointPrice);
+            var datafeed = new DataFeedMock(300);
+            var ticker = new Ticker("RUT", "CME", 1, 2014);
+            var tickerInfo = new TickerInfo(ticker)
+            {
+                PointPrice = 50,
+                TickSize = 1 / 4
+            };
 
             var kernel = portfolio.Kernel;
 
+            portfolio.TickerInfos.Add(ticker, tickerInfo);
             portfolio.DataFeeds.AddDataFeed(datafeed);
 
-            kernel.AddEvent(new FillEvent(datafeed, TradeDirection.Sell, 100, 100, 0, 1));
-            kernel.AddEvent(new FillEvent(datafeed, TradeDirection.Sell, 100, 100, 0, 1));
-            kernel.AddEvent(new FillEvent(datafeed, TradeDirection.Sell, 100, 100, 0, 1));
+            kernel.AddEvent(new FillEvent(ticker, TradeDirection.Sell, 100, 100, 0, 1));
+            kernel.AddEvent(new FillEvent(ticker, TradeDirection.Sell, 100, 100, 0, 1));
+            kernel.AddEvent(new FillEvent(ticker, TradeDirection.Sell, 100, 100, 0, 1));
 
             kernel.RegisterEventConsumer(portfolio);
             kernel.Run();
 
-            var expectedValue = initial - 3 * 200 * pointPrice;
+            var expectedValue = initial - 3 * 200 * tickerInfo.PointPrice;
             Assert.AreEqual(expectedValue, portfolio.PortfolioValue);
         }
     }

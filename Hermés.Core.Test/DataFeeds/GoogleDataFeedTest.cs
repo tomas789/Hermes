@@ -73,8 +73,8 @@ a1395086400,16247.22,16270.34,16066.37,16066.37,88926593
 
             using (var testDataStream = new StringReader(input))
             {
-                var pointPrice = 50.0;
-                var googleDataFeed = new GoogleDataFeed(testDataStream, pointPrice);
+                var ticker = new Ticker("DUMMY", "DUMMY", 1, 2000);
+                var googleDataFeed = new GoogleDataFeed(ticker, testDataStream);
 
                 var portfolio = new PortfolioMock {Broker = new AMPBroker()};
                 portfolio.DataFeeds.AddDataFeed(googleDataFeed);

@@ -13,18 +13,18 @@ namespace Hermés.Core.Events
     /// </summary>
     public class FillEvent : Event
     {
-        public DataFeed Market;
+        public Ticker Ticker;
         public TradeDirection Direction;
         public double Price;
         public double FillPrice;
         public double Cost;
         public double Size;
 
-        public FillEvent(DataFeed market, TradeDirection direction, 
+        public FillEvent(Ticker ticker, TradeDirection direction, 
             double price, double fillPrice, double cost, double size)
             : base(DateTime.Now)
         {
-            Market = market;
+            Ticker = ticker;
             Direction = direction;
             Price = price;
             FillPrice = fillPrice;

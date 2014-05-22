@@ -100,6 +100,9 @@ namespace Hermés.Core
         /// </summary>
         protected HashSet<Position> Positions = new HashSet<Position>();
 
+        public readonly Dictionary<Ticker, TickerInfo> TickerInfos = 
+            new Dictionary<Ticker, TickerInfo>(); 
+
         #region Event dispatching
 
         /// <summary>
