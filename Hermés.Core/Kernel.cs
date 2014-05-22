@@ -24,6 +24,8 @@ namespace Hermés.Core
 
         public DateTime WallTime;
 
+        public EventPriorityQueue Events { get { return _events; } }
+
         /// <summary>
         /// Run simulation.
         /// </summary>
@@ -34,6 +36,11 @@ namespace Hermés.Core
         public void Run()
         {
             Dispatcher();
+        }
+
+        public void Step()
+        {
+            DispatcherStep();
         }
 
         /// <summary>
@@ -67,10 +74,18 @@ namespace Hermés.Core
         {
             while (_events.Count != 0)
             {
-                var ev = _events.Dequeue();
-                foreach (var consumer in _eventConsumers)
-                    consumer.DispatchEvent(ev);
+                DispatcherStep();
             }
+        }
+
+        private void DispatcherStep()
+        {
+            if (_events.Count == 0)
+                throw new IndexOutOfRangeException("Empty event queue");
+
+            var ev = _events.Dequeue();
+            foreach (var consumer in _eventConsumers)
+                consumer.DispatchEvent(ev);
         }
 
         /// <summary>

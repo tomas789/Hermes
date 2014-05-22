@@ -4,6 +4,13 @@
         Title="MainWindow" Height="400" Width="400">
     <Grid>
         <StackPanel>
+            <ComboBox>
+                <ComboBoxItem Content="NaivePortfolio" />
+            </ComboBox>
+            
+            <ListBox Name="DataFeedBox"></ListBox>
+            <Button Name="AddDataFeedButton" Content="Add DataFeed" />
+            <Button Name="RemoveSelectedDataFeedButton" Content="Remove selected DataFeed" />
 
             <Button Name="Pick_button" Click="Pick_button_OnClick">Pick File</Button>
             <TextBox Name="Pick_textbox" Text="File not picked yet!"/>
@@ -11,6 +18,15 @@
             <TextBox Name="Initialize_textbox" Text="File not picked yet!" />
             <Button Name="Run_button" Click="Run_button_OnClick">Run</Button>
             <TextBox Name="Run_textbox" Text="File not picked yet!"/>
+
+            <StackPanel Orientation="Horizontal">
+                <Button Name="StepButton" Content="Step" Click="StepButton_onClick" />
+                <Button Name="ContinueButton" Content="Continue" />
+                <Label Name="EventCounter" Content="Events: 0" />
+            </StackPanel>
+
+            <ListBox Name="EventBox" />
         </StackPanel>
+
     </Grid>
 </Window>

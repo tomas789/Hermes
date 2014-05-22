@@ -14,6 +14,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Hermés.Core.Brokers;
+using Hermés.Core.Events;
 using Microsoft.Win32;
 using Hermés.Core;
 using Hermés.Core.Portfolios;
@@ -71,9 +72,19 @@ namespace Hermés.GUI
                 return;
             if (Run_textbox.Text != "Working")
             {
+                var begin = DateTime.Now;
                 Run_textbox.Text = "Working";
                 _naivePortfolio.Kernel.Run();
+                Run_textbox.Text = string.Format("Done in {0}, value {1}", DateTime.Now - begin, _naivePortfolio.PortfolioValue);
             }
+        }
+
+        private void StepButton_onClick(object sender, RoutedEventArgs e)
+        {
+            _naivePortfolio.Kernel.Step();
+            EventCounter.Content = string.Format("Events: {0}, Portfolio value: {1}", 
+                _naivePortfolio.Kernel.Events.Count,
+                _naivePortfolio.PortfolioValue);
         }
     }
 }
