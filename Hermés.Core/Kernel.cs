@@ -58,12 +58,12 @@ namespace Hermés.Core
         /// <param name="consumer">Event consumer to register</param>
         public void RegisterEventConsumer(IEventConsumer consumer)
         {
-            lock (_events)
-            {
-                Monitor.Pulse(_events);
-                _eventConsumers.Add(consumer);
-            }
-            
+            _eventConsumers.Add(consumer);
+        }
+
+        public void UnregisterEventConsumer(IEventConsumer consumer)
+        {
+            _eventConsumers.Remove(consumer);
         }
 
         public void StopSimulation()
@@ -81,7 +81,12 @@ namespace Hermés.Core
         /// <param name="ev">Event to add.</param>
         public void AddEvent(Event ev)
         {
-            _events.Enqueue(ev);
+            lock (_events)
+            {
+                _events.Enqueue(ev);
+                Monitor.Pulse(_events);
+            }
+            
         }
 
         /// <summary>
