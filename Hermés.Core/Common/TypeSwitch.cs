@@ -19,7 +19,9 @@ namespace Hermés.Core.Common
 
         public void Switch(object x)
         {
-            _matches[x.GetType()](x);
+            Action<object> action;
+            if (_matches.TryGetValue(x.GetType(), out action))
+                action(x);
         }
     }
 }
