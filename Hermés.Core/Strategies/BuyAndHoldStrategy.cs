@@ -49,7 +49,10 @@ namespace Hermés.Core.Strategies
 
         private void DispatchConcrete(MarketEvent ev)
         {
-            if (_dataFeeds.Count != 0 && _generatedSignals.Contains(ev.Market)) 
+            if (_generatedSignals.Contains(ev.Market))
+                return;
+
+            if (_dataFeeds.Count != 0 && !_dataFeeds.Contains(ev.Market)) 
                 return;
 
             var signal = new SignalEvent(ev.Market, SignalKind.Buy);
