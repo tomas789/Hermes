@@ -50,9 +50,9 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <Compile Include="Common\PriorityQueueTest.cs" />
-    <Compile Include="DataFeeds\GoogleDataFeedTest.cs" />
-    <Compile Include="Events\MarketEventTest.cs" />
+    <Compile Include="CommonTest\PriorityQueueTest.cs" />
+    <Compile Include="DataFeedsTest\GoogleDataFeedTest.cs" />
+    <Compile Include="EventsTest\MarketEventTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="KernelTest.cs" />
     <Compile Include="NaivePortfolioTest.cs" />

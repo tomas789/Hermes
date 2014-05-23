@@ -28,7 +28,7 @@ namespace Hermés.Core.Portfolios
         public override void DispatchConcrete(FillEvent ev)
         {
             var position = new Position(ev.Market, ev.Direction, ev.FillPrice, ev.Size);
-            Positions.Add(position);
+            Positions.Add(ev.Time, position);
         }
 
         public override void DispatchConcrete(MarketEvent e)
@@ -65,8 +65,11 @@ namespace Hermés.Core.Portfolios
         {
             var sizeHolded = new Dictionary<DataFeed, double>();
             var priceCache = new Dictionary<DataFeed, double>();
-            foreach (var position in Positions)
+            foreach (var item in Positions)
             {
+                var time = item.Key;
+                var position = item.Value;
+                
                 if (!sizeHolded.ContainsKey(position.Market))
                     sizeHolded.Add(position.Market, 0);
 

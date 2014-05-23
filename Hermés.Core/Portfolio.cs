@@ -99,7 +99,8 @@ namespace Hermés.Core
         /// <summary>
         /// Set of all positions executed by portfolio.
         /// </summary>
-        protected HashSet<Position> Positions = new HashSet<Position>();
+        protected Dictionary<DateTime, Position> Positions = 
+            new Dictionary<DateTime, Position>();
 
         #region Event dispatching
 
