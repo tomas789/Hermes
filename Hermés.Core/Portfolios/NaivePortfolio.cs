@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Diagnostics;
 using Hermés.Core.Common;
 using Hermés.Core.Events;
 
@@ -27,6 +28,7 @@ namespace Hermés.Core.Portfolios
 
         public override void DispatchConcrete(FillEvent ev)
         {
+            Debug.WriteLine("Portfolio got FillEvent: {0}", ev);
             var position = new Position(ev.Market, ev.Direction, ev.FillPrice, ev.Size);
             Positions.Add(position);
         }
@@ -63,72 +65,7 @@ namespace Hermés.Core.Portfolios
 
         protected override double GetPortfolioValue()
         {
-            var sizeHolded = new Dictionary<DataFeed, double>();
-            var priceCache = new Dictionary<DataFeed, double>();
-            foreach (var position in Positions)
-            {
-                if (!sizeHolded.ContainsKey(position.Market))
-                    sizeHolded.Add(position.Market, 0);
-
-                if (!priceCache.ContainsKey(position.Market))
-                {
-                    var posHolder = position;
-                    Func<Position, PriceKind> selectKind = (pos) =>
-                    {
-                        switch (pos.Direction)
-                        {
-                            case TradeDirection.Buy:
-                                return PriceKind.Ask;
-                            case TradeDirection.Sell:
-                                return PriceKind.Bid;
-                            default:
-                                throw new ImpossibleException();
-                        }
-                    };
-
-                    var pricesBidAsk = (from datafeed in DataFeeds
-                                        select datafeed.CurrentPrice(posHolder.Market, 
-                                                                     selectKind(posHolder))
-                                            into datafeedPrice
-                                            where datafeedPrice.Close.HasValue
-                                            select datafeedPrice);
-
-                    var prices = (from datafeed in DataFeeds
-                                  let kind = PriceKind.Unspecified
-                                  select datafeed.CurrentPrice(posHolder.Market, kind)
-                                      into datafeedPrice
-                                      where datafeedPrice.Close.HasValue
-                                      select datafeedPrice);
-
-                    var price = pricesBidAsk.Concat(prices).FirstOrDefault();
-                    if (price != null && price.Close.HasValue) 
-                        priceCache.Add(position.Market, price.Close.Value);
-                    else
-                        throw new OperationCanceledException(
-                            string.Format("Current price not found for ticker {0}", position.Market));
-                }
-                
-                double change = 0;
-                switch (position.Direction)
-                {
-                    case TradeDirection.Buy:
-                        change = (priceCache[position.Market] - position.Price) * position.Size;
-                        break;
-                    case TradeDirection.Sell:
-                        change = (position.Price - priceCache[position.Market]) * position.Size;
-                        break;
-                    default:
-                        throw new ImpossibleException();
-                }
-
-                sizeHolded[position.Market] += change;
-            }
-
-            return _initialCapital + (from item in sizeHolded 
-                                      let ticker = item.Key 
-                                      let pts = item.Value
-                                      let pointPrice = item.Key.PointPrice 
-                                      select pts*pointPrice).Sum();
+            throw new NotImplementedException();
         }
     }
 }

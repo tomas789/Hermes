@@ -21,19 +21,53 @@ namespace Hermés.Core
     {
         protected bool Initialized = false;
         public Kernel Kernel;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <remarks>
+        /// TODO: Replace with background private implementation.
+        /// </remarks>
         public CultureInfo CultureInfo = new CultureInfo("en");
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <remarks>
+        /// TODO: Remove.
+        /// </remarks>
+        /// <returns></returns>
         public CultureInfo getCultureInfo()
         {
             return CultureInfo;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <remarks>
+        /// TODO: Remove.
+        /// </remarks>
+        /// <returns></returns>
         public void setCultureInfo(CultureInfo newCultureInfo)
         {
             if (Initialized)
                 // cannot set CultureInfo after Initializing
                 throw new InvalidOperationException(); 
             CultureInfo = newCultureInfo;
+        }
+
+        private bool _hasBidAsk = false;
+
+        public bool HasBidAsk
+        {
+            get { return _hasBidAsk; };
+            protected set
+            {
+                if (Initialized)
+                    throw new InvalidOperationException("Changing state after initialization"); 
+                _hasBidAsk = value;
+            };
         }
 
         public double PointPrice { get; private set; }

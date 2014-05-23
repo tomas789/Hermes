@@ -67,9 +67,25 @@ namespace Hermés.Core
 
 
         /// <summary>
+        /// Private implementation for Broker variable.
+        /// </summary>
+        private IBroker _broker;
+
+        /// <summary>
         /// Broker which will execute orders.
         /// </summary>
-        public IBroker Broker;
+        public IBroker Broker
+        {
+            get {  return _broker; }
+            set
+            {
+                if (_broker != null)
+                    Kernel.UnregisterEventConsumer(_broker);
+
+                Kernel.RegisterEventConsumer(value);
+                _broker = value;
+            }
+        }
 
         #endregion
 
@@ -172,6 +188,7 @@ namespace Hermés.Core
                 throw new InvalidOperationException(
                     "Trying to add strategy after initialization.");
 
+            _portfolio.Kernel.RegisterEventConsumer(strategy);
             _strategies.Add(strategy);
         }
     }
@@ -234,4 +251,12 @@ namespace Hermés.Core
     }
 
     #endregion
+
+    class PortfolioStateAtTime
+    {
+        public double CapitalAvailable;
+        public Dictionary<DataFeed, double> PositionPrice = 
+            new Dictionary<DataFeed, double>();
+    );
+    }
 }
