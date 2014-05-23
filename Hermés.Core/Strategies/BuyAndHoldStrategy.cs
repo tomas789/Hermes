@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Diagnostics;
 using Hermés.Core;
 using Hermés.Core.Events;
 using Hermés.Core.Common;
 
 namespace Hermés.Core.Strategies
 {
-    class BuyAndHoldStrategy : IStrategy
+    public class BuyAndHoldStrategy : IStrategy
     {
         private readonly List<DataFeed> _dataFeeds;
         private readonly HashSet<DataFeed> _generatedSignals = 
@@ -20,6 +21,7 @@ namespace Hermés.Core.Strategies
 
         public BuyAndHoldStrategy()
         {
+            Debug.WriteLine("BuyAndHoldStrategy is default initialized.");
             _dataFeeds = new List<DataFeed>();
         }
 
@@ -53,6 +55,7 @@ namespace Hermés.Core.Strategies
             var signal = new SignalEvent(ev.Market, SignalKind.Buy);
             Kernel.AddEvent(signal);
             _generatedSignals.Add(ev.Market);
+            Debug.WriteLine("Buy and hold signal: {0}", signal);
         }
 
         public void Dispose()

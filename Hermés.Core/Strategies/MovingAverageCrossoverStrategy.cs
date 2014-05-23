@@ -8,7 +8,7 @@ using Hermés.Core.Events;
 
 namespace Hermés.Core.Strategies
 {
-    class MovingAverageCrossoverStrategy : IStrategy
+    public class MovingAverageCrossoverStrategy : IStrategy
     {
         private DataFeed _market;
         private int _slowPeriod;
