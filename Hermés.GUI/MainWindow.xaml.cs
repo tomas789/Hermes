@@ -20,7 +20,6 @@ using Microsoft.Win32;
 using Hermés.Core;
 using Hermés.Core.Portfolios;
 using Hermés.Core.DataFeeds;
-using Hermés.Core.Strategies;
 
 namespace Hermés.GUI
 {
@@ -64,7 +63,6 @@ namespace Hermés.GUI
                 var file = dlg.FileName;
                 var gdf = new GoogleDataFeed(file, _pointPrice);
                 _portfolio.DataFeeds.AddDataFeed(gdf);
-                _portfolio.Strategies.AddStrategy(new BuyAndHoldStrategy());
                 Pick_textbox.Text = "Picked File: "+file;
                 Initialize_textbox.Text = "Press initialize";
             }

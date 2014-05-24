@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -14,14 +13,14 @@ namespace Hermés.Core.DataFeeds
 {
     public class GoogleDataFeed : DataFeed
     {
-        private readonly SortedDictionary<DateTime, PriceGroup> _data =
-            new SortedDictionary<DateTime, PriceGroup>();
+        
 
+        private readonly SortedDictionary<DateTime, PriceGroup> _data = 
+            new SortedDictionary<DateTime, PriceGroup>();
         private readonly string _fileName;
         private readonly TextReader _inputFileReader;
 
-        public int Count
-        {
+        public int Count { 
             get { return _data.Count; }
         }
 
@@ -36,7 +35,7 @@ namespace Hermés.Core.DataFeeds
         {
             _inputFileReader = textReader;
         }
-
+        
         public override void Initialize(Kernel kernel)
         {
             base.Initialize(kernel);
@@ -44,10 +43,10 @@ namespace Hermés.Core.DataFeeds
             if (_fileName == null && _inputFileReader == null)
                 return;
 
-            if (_fileName != null)
+            if (_fileName != null) 
                 using (var inFile = new StreamReader(_fileName))
                     ParseInputFile(inFile);
-            else
+            else 
                 ParseInputFile(_inputFileReader);
         }
 
@@ -144,7 +143,7 @@ namespace Hermés.Core.DataFeeds
         {
             var absoluteTimestamp = -1;
 
-            foreach (var parts in data.Select(row => row.Split(new[] {','})))
+            foreach (var parts in data.Select(row => row.Split(new [] {','})))
             {
                 if (parts.Length != headerInfo.Columns.Count)
                     throw new InvalidDataException("Invalid headers format.");
@@ -174,7 +173,7 @@ namespace Hermés.Core.DataFeeds
                                 time = headerInfo.GetDateTimeFromTimestamp(
                                     absoluteTimestamp + relativeTimestamp);
                             }
-
+                            
                             break;
                         case "CLOSE":
                             if (!double.TryParse(parts[i], out value))
@@ -227,36 +226,30 @@ namespace Hermés.Core.DataFeeds
 
         public override PriceGroup CurrentPrice(DataFeed market, PriceKind priceKind)
         {
-            Debug.WriteLine("GoogleDataFeed asked for CurrentPrice: Market: {0}; PriceKind: {1}", market, priceKind);
-            if (PriceKind.Unspecified != priceKind || !market.Equals(this) || _data.Count == 0)
+            if (PriceKind.Unspecified != priceKind || !market.Equals(this))
                 return null;
 
             PriceGroup group;
-            if (_data.TryGetValue(Kernel.WallTime, out group))
-                return group;
-
-            var closestTime = _data.Aggregate(DateTime.MinValue,
-                (time, item) => (item.Key <= Kernel.WallTime && item.Key > time) ? item.Key : time);
-            return closestTime == DateTime.MinValue ? null : _data[closestTime];
+            return _data.TryGetValue(Kernel.WallTime, out group) ? group : null;
         }
 
         public override PriceGroup GetHistoricalPriceGroup(int lookbackPeriod)
         {
             throw new NotImplementedException();
         }
+    }
 
-        private class GoogleHeaderInfo
+    class GoogleHeaderInfo
+    {
+        public string Exchange;
+        public int Interval;
+        public int TimezoneOffset;
+        public List<string> Columns = new List<string>(); 
+
+        public DateTime GetDateTimeFromTimestamp(int timestamp)
         {
-            public string Exchange;
-            public int Interval;
-            public int TimezoneOffset;
-            public List<string> Columns = new List<string>();
-
-            public DateTime GetDateTimeFromTimestamp(int timestamp)
-            {
-                var basetime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
-                return basetime.AddSeconds(timestamp - 60*TimezoneOffset);
-            }
+            var basetime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+            return basetime.AddSeconds(timestamp - 60 * TimezoneOffset);
         }
     }
 }

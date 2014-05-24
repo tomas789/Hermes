@@ -24,11 +24,5 @@ namespace Hermés.Core
             Price = price;
             Size = size;
         }
-
-        public override string ToString()
-        {
-            return string.Format("Position :: DataFeed: {0}; TradeDirection: {1}; Price: {2}; Size: {3}", 
-                Market, Direction, Price, Size);
-        }
     }
 }
