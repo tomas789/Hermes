@@ -65,10 +65,9 @@ namespace Hermés.Core
         /// Returns <value>null</value> if current DataFeed
         /// doesn't have this information.
         /// </remarks>
-        /// <param name="market">Ticker to get price of.</param>
         /// <param name="priceKind">Kind of price.</param>
         /// <returns>Current price group.</returns>
-        public abstract PriceGroup CurrentPrice(DataFeed market, PriceKind priceKind);
+        public abstract PriceGroup CurrentPrice(PriceKind priceKind = PriceKind.Unspecified);
 
         public abstract PriceGroup GetHistoricalPriceGroup(int lookbackPeriod);
     }

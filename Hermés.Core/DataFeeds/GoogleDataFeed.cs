@@ -13,8 +13,6 @@ namespace Hermés.Core.DataFeeds
 {
     public class GoogleDataFeed : DataFeed
     {
-        
-
         private readonly SortedDictionary<DateTime, PriceGroup> _data = 
             new SortedDictionary<DateTime, PriceGroup>();
         private readonly string _fileName;
@@ -224,13 +222,29 @@ namespace Hermés.Core.DataFeeds
         {
         }
 
-        public override PriceGroup CurrentPrice(DataFeed market, PriceKind priceKind)
+        public override PriceGroup CurrentPrice(PriceKind priceKind)
         {
-            if (PriceKind.Unspecified != priceKind || !market.Equals(this))
-                return null;
-
             PriceGroup group;
-            return _data.TryGetValue(Kernel.WallTime, out group) ? group : null;
+            if (_data.TryGetValue(Kernel.WallTime, out group))
+            {
+                return group;
+            } 
+            else 
+            {
+                var time = DateTime.MinValue;
+                PriceGroup currentPrice = null;
+
+                foreach (var item in _data)
+                {
+                    if (item.Key > time && item.Key <= Kernel.WallTime)
+                    {
+                        time = item.Key;
+                        currentPrice = item.Value;
+                    }
+                }
+
+                return currentPrice;
+            }
         }
 
         public override PriceGroup GetHistoricalPriceGroup(int lookbackPeriod)

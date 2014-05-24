@@ -52,10 +52,10 @@ namespace Hermés.Core.Strategies
             if (_generatedSignals.Contains(ev.Market) || (_dataFeeds.Count != 0 && !_dataFeeds.Contains(ev.Market)))
                 return;
 
-            var signal = new SignalEvent(ev.Market, SignalKind.Buy);
+            var signal = new SignalEvent(Kernel.WallTime, ev.Market, SignalKind.Buy);
             Kernel.AddEvent(signal);
             _generatedSignals.Add(ev.Market);
-            Debug.WriteLine("Buy and hold signal: {0}", signal);
+            Debug.WriteLine("Buy and hold signal: {0}, Time: {1}", signal, Kernel.WallTime);
         }
 
         public void Dispose()

@@ -110,6 +110,8 @@ namespace Hermés.Core
                 return;
 
             var ev = _events.Dequeue();
+            if (ev.Time > WallTime)
+                WallTime = ev.Time;
             foreach (var consumer in _eventConsumers)
                 consumer.DispatchEvent(ev);
         }
