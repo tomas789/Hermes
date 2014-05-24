@@ -17,8 +17,8 @@ namespace Hermés.Core.Events
         public OrderKind Kind;
         public double Price;
 
-        public OrderEvent(DataFeed market, TradeDirection direction, OrderKind kind, double price = Double.NaN)
-            : base(DateTime.Now)
+        public OrderEvent(DateTime time, DataFeed market, TradeDirection direction, OrderKind kind, double price = Double.NaN)
+            : base(time)
         {
             Market = market;
             Direction = direction;

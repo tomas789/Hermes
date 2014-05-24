@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Diagnostics;
 using Hermés.Core.Common;
 using Hermés.Core.Events;
 
@@ -31,6 +32,8 @@ namespace Hermés.Core.Brokers
 
         private void DispatchConcrete(OrderEvent ev)
         {
+            Debug.WriteLine("Broker got OrderEvent: {0}, Time: {1}", ev, _kernel.WallTime);
+
             if (_kernel == null)
                 throw new ArgumentNullException();
 
@@ -38,7 +41,26 @@ namespace Hermés.Core.Brokers
             if (TradeCosts.ContainsKey(ev.Market))
                 cost = TradeCosts[ev.Market];
 
-            var fill = new FillEvent(ev.Market, ev.Direction, ev.Price, ev.Price, cost, 1);
+            PriceKind kind;
+            switch (ev.Direction) {
+                case TradeDirection.Buy:
+                    kind = PriceKind.Ask;
+                    break;
+                case TradeDirection.Sell:
+                    kind = PriceKind.Bid;
+                    break;
+                default:
+                    throw new ImpossibleException();
+            }
+
+            var fillPrice = ev.Market.CurrentPrice(kind);
+            if (fillPrice == null)
+                throw new Exception("Failed to get current price.");
+
+            
+
+            var fill = new FillEvent(ev.Market, ev.Direction, ev.Price, fillPrice.Close, cost, 1);
+            Debug.WriteLine("AMPBroker filling: {0}, Time: {1}", fill, _kernel.WallTime);
             _kernel.AddEvent(fill);
         }
 

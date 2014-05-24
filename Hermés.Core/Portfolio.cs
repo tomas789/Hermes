@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Diagnostics;
 using Hermés.Core;
 using Hermés.Core.Common;
 using Hermés.Core.Events;
@@ -29,6 +30,8 @@ namespace Hermés.Core
 
         #endregion
 
+        private bool _initialized = false;
+
         /// <summary>
         /// Freeze current state and get ready to run simulation.
         /// </summary>
@@ -38,9 +41,11 @@ namespace Hermés.Core
         /// </remarks>
         public void Initialize()
         {
+            Debug.WriteLine("Portfolio initializing.");
+            _initialized = true;
             Kernel.RegisterEventConsumer(this);
-            Strategies.Initialize(Kernel);
             DataFeeds.Initialize(Kernel);
+            Strategies.Initialize(Kernel);
             Broker.Initialize(Kernel);
         }
 
@@ -65,11 +70,23 @@ namespace Hermés.Core
 
         public DataFeedHelper DataFeeds { get; private set; }
 
+        private IBroker _broker;
 
         /// <summary>
         /// Broker which will execute orders.
         /// </summary>
-        public IBroker Broker;
+        public IBroker Broker
+        {
+            get { return _broker; }
+            set
+            {
+                if (_initialized)
+                    throw new DoubleInitializationException();
+
+                _broker = value;
+                Kernel.RegisterEventConsumer(value);
+            }
+        }
 
         #endregion
 
@@ -99,7 +116,7 @@ namespace Hermés.Core
         /// <summary>
         /// Set of all positions executed by portfolio.
         /// </summary>
-        protected HashSet<Position> Positions = new HashSet<Position>();
+        protected Dictionary<DateTime, Position> Positions = new Dictionary<DateTime, Position>();
 
         #region Event dispatching
 
@@ -109,9 +126,6 @@ namespace Hermés.Core
         /// <param name="e">Event.</param>
         public void DispatchEvent(Event e)
         {
-            if (e.Time > WallTime)
-                Kernel.WallTime = e.Time;
-
             var ts = new TypeSwitch()
                 .Case((FillEvent x) => DispatchConcrete(x))
                 .Case((MarketEvent x) => DispatchConcrete(x))
@@ -173,6 +187,7 @@ namespace Hermés.Core
                     "Trying to add strategy after initialization.");
 
             _strategies.Add(strategy);
+            _portfolio.Kernel.RegisterEventConsumer(strategy);
         }
     }
 

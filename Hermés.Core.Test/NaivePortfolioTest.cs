@@ -30,8 +30,7 @@ namespace Hermés.Core.Test
         public override void Dispose()
         {
         }
-
-        public override PriceGroup CurrentPrice(DataFeed market, PriceKind priceKind)
+        public override PriceGroup CurrentPrice(PriceKind priceKind = PriceKind.Unspecified)
         {
             return _constantPriceGroup;
         }

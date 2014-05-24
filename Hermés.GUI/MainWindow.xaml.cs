@@ -20,6 +20,7 @@ using Microsoft.Win32;
 using Hermés.Core;
 using Hermés.Core.Portfolios;
 using Hermés.Core.DataFeeds;
+using Hermés.Core.Strategies;
 
 namespace Hermés.GUI
 {
@@ -29,7 +30,7 @@ namespace Hermés.GUI
     public partial class MainWindow : Window
     {
         private Portfolio _portfolio;
-        private double _pointPrice = 10;
+        private double _pointPrice = 50;
         private double _initialCapital = 1000000;
 
         public static readonly DependencyProperty IsEverythingLoadedProperty =
@@ -62,6 +63,7 @@ namespace Hermés.GUI
             {
                 var file = dlg.FileName;
                 var gdf = new GoogleDataFeed(file, _pointPrice);
+                _portfolio.Strategies.AddStrategy(new BuyAndHoldStrategy());
                 _portfolio.DataFeeds.AddDataFeed(gdf);
                 Pick_textbox.Text = "Picked File: "+file;
                 Initialize_textbox.Text = "Press initialize";

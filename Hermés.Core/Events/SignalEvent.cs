@@ -19,13 +19,6 @@ namespace Hermés.Core.Events
         public readonly DataFeed Market;
         public readonly SignalKind Kind;
 
-        public SignalEvent(DataFeed market, SignalKind kind) 
-            : base(DateTime.Now)
-        {
-            Market = market;
-            Kind = kind;
-        }
-
         public SignalEvent(DateTime time, DataFeed market, SignalKind kind)
             : base(time)
         {
