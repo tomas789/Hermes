@@ -56,6 +56,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="KernelTest.cs" />
     <Compile Include="NaivePortfolioTest.cs" />
+    <Compile Include="StrategiesTest\GeneticStrategyTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Hermés.Core\Hermés.Core.csproj">

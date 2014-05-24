@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Net.Mime;
 using System.Text;
@@ -15,6 +16,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using Hermés.Core.Brokers;
+using System.Diagnostics;
 using Hermés.Core.Events;
 using Microsoft.Win32;
 using Hermés.Core;
@@ -33,67 +35,35 @@ namespace Hermés.GUI
         private double _pointPrice = 50;
         private double _initialCapital = 1000000;
 
-        public static readonly DependencyProperty IsEverythingLoadedProperty =
-            DependencyProperty.Register("IsEverythingLoaded", typeof (Boolean),
-                typeof (MainWindow), new PropertyMetadata(false));
-
-        public Boolean IsEverythingLoaded
-        {
-            get { return (Boolean)this.GetValue(IsEverythingLoadedProperty); }
-            set { this.SetValue(IsEverythingLoadedProperty, value); }
-        }
-
         public MainWindow()
         {
-            _portfolio = new NaivePortfolio(_initialCapital);
+            DataContext = this;
             InitializeComponent();
-            IsEverythingLoaded = true;
         }
 
-
-        private void Pick_button_OnClick(object sender, RoutedEventArgs e)
+        public IEnumerable<string> ComboItems
         {
-            if (Pick_textbox.Text != "File not picked yet!")
-            {
-                return;
-            }
-            var dlg = new Microsoft.Win32.OpenFileDialog();
-            bool? result = dlg.ShowDialog();
-            if (result == true)
-            {
-                var file = dlg.FileName;
-                var gdf = new GoogleDataFeed(file, _pointPrice);
-                _portfolio.Strategies.AddStrategy(new BuyAndHoldStrategy());
-                _portfolio.DataFeeds.AddDataFeed(gdf);
-                Pick_textbox.Text = "Picked File: "+file;
-                Initialize_textbox.Text = "Press initialize";
-            }
-
+            get { return new string[] {"NaivePortfolio", "Test 2"}; }
         }
 
-        private void Initialize_button_OnClick(object sender, RoutedEventArgs e)
+        private void InitializeButton_OnClick(object sender, RoutedEventArgs e)
         {
-            if (Pick_textbox.Text == "File not picked yet!")
-                return;
             _portfolio.Broker = new AMPBroker();
             _portfolio.Initialize();
-            
-            Initialize_textbox.Text = "Initialized!";
-            IsEverythingLoaded = false;
-        }
-        private void Run_button_OnClick(object sender, RoutedEventArgs e)
-        {
-            if (Initialize_textbox.Text != "Initialized!" || Run_textbox.Text == "Working")
-                return;
 
+            RunButton.IsEnabled = true;
+            InitializeButton.IsEnabled = false;
+        }
+        private void RunButton_OnClick(object sender, RoutedEventArgs e)
+        {
             var begin = DateTime.Now;
-            Run_textbox.Text = "Working";
+            StatusBox.Text = "Working";
             var runTask = new Task(_portfolio.Kernel.Run);
             runTask.ContinueWith(delegate
             {
-                Run_textbox.Dispatcher.BeginInvoke((Action)delegate
+                StatusBox.Dispatcher.BeginInvoke((Action)delegate
                 {
-                    Run_textbox.Text = string.Format("Done in {0}, value {1}", DateTime.Now - begin,
+                    StatusBox.Text = string.Format("Done in {0}, value {1}", DateTime.Now - begin,
                         _portfolio.PortfolioValue);
                 });
             });
@@ -113,6 +83,80 @@ namespace Hermés.GUI
         private void StopButton_OnClick(object sender, RoutedEventArgs e)
         {
             _portfolio.Kernel.StopSimulation();
+        }
+
+        private void ConstructButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            var selected = PortfolioComboBox.SelectedValue;
+            if (selected == null)
+            {
+                MessageBox.Show("Portfolio must be selected.");
+                return;
+            }
+
+            switch (selected.ToString())
+            {
+                case "NaivePortfolio":
+                    _portfolio = new NaivePortfolio(_initialCapital);
+                    break;
+                default:
+                    throw new Exception("Impossible.");
+            }
+
+            PortfolioComboBox.IsEnabled = false;
+            ConstructButton.IsEnabled = false;
+            SelectFile.IsEnabled = false;
+            AddDataFeed.IsEnabled = false;
+            DataFeedBox.IsEnabled = false;
+
+            foreach (var datafeed in from object filenameItem in DataFeedBox.Items
+                select filenameItem.ToString()
+                into filename
+                select new GoogleDataFeed(filename, 1))
+            {
+                Debug.WriteLine("Adding datafeed: {0}", datafeed);
+                _portfolio.DataFeeds.AddDataFeed(datafeed);
+            }
+
+            _portfolio.Strategies.AddStrategy(new BuyAndHoldStrategy());
+
+            InitializeButton.IsEnabled = true;
+        }
+
+        private void AddDataFeed_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (SelectedFile == null || 
+                SelectedFile.Text == null || 
+                SelectedFile.Text == "none")
+                return;
+
+            var filename = SelectedFile.Text;
+            DataFeedBox.Items.Add(filename);
+            SelectedFile.Text = "none";
+        }
+
+        private void SelectedFile_OnTextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (AddDataFeed == null)
+                return;
+
+            var text = SelectedFile.Text ?? "none";
+            AddDataFeed.IsEnabled = text != "none";
+        }
+
+        private void SelectFile_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (SelectedFile == null || SelectedFile.Text == null)
+                return;
+
+            var dlg = new Microsoft.Win32.OpenFileDialog();
+            var result = dlg.ShowDialog();
+
+            if (result != true) 
+                return;
+
+            var filename = dlg.FileName;
+            SelectedFile.Text = filename;
         }
     }
 }
