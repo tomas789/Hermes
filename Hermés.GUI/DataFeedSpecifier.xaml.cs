@@ -15,6 +15,8 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using System.Windows.Threading;
+using System.Diagnostics;
 using Hermés.Core.DataFeeds;
 using Hermés.GUI.DataFeedGUIs;
 using Microsoft.Win32;
@@ -49,15 +51,35 @@ namespace Hermés.GUI
             InitializeComponent();
         }
 
-        private void TypeBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void TypeBox_OnSelectionChanged(object sender, RoutedEventArgs eventArgs)
         {
-            var t = _mainWindow.DataFeedTypes[TypeBox.SelectedItem.ToString()];
-            MainGrid.Children.Remove(DataFeedPanel);
-            DataFeedPanel = DataFeedGuis[t].MakePanel();
-            DataFeedPanel.Margin = new Thickness(0,104,0,0);
-            MainGrid.Children.Add(DataFeedPanel);
-            
+            if (_mainWindow == null || _mainWindow.DataFeedTypes == null ||
+                TypeBox == null || TypeBox.SelectedItem == null || DataFeedPanel == null)
+                return;
 
+            DataFeedPanel.Children.Clear();
+
+            try
+            {
+                Type type;
+                if (!_mainWindow.DataFeedTypes.TryGetValue(TypeBox.SelectedItem.ToString(), out type))
+                    throw new Exception("Internal error (no item in DataFeedTypes found)");
+
+                DataFeedGUI gui;
+                if (!DataFeedGuis.TryGetValue(type, out gui))
+                    throw new Exception("Internal error (no item in DataFeedGuis found)");
+
+                DataFeedPanel.Children.Add(gui.MakePanel());
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine("Got exception {0}", e.Message);
+                var errorLabel = new Label {Content = "Error: " + e.Message};
+                DataFeedPanel.Children.Clear();
+                DataFeedPanel.Children.Add(errorLabel);
+            }
+
+            DataFeedPanel.Dispatcher.Invoke(DispatcherPriority.Render, (Action)(() => { }));
         }
     }
 }
