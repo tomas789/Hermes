@@ -1,0 +1,12 @@
+﻿<Window x:Class="Hermés.GUI.DataFeedSpecifier"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="DataFeedSpecifier" Height="150" Width="300">
+    <Grid>
+        <StackPanel Name="IntroStackPanel" Visibility="Visible">
+            <Label Content="DataFeed type: " />
+            <ComboBox Name="TypeBox" ItemsSource="{Binding Path=DataFeedKeysItems}" SelectionChanged="TypeBox_OnSelectionChanged"/>
+        </StackPanel>
+        <StackPanel Name="GoogleDataFeed" Visibility="Collapsed" />
+    </Grid>
+</Window>

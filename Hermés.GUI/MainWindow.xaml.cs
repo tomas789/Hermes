@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 using System.Net.Mime;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -26,18 +28,29 @@ using Hermés.Core.Strategies;
 
 namespace Hermés.GUI
 {
+
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window
     {
         private Portfolio _portfolio;
+        private Dictionary<string, DataFeed> _dataFeeds;
         private double _pointPrice = 50;
         private double _initialCapital = 1000000;
+        public Dictionary<string, Type> DataFeedTypes;
+
+        public void SetDataFeeds()
+        {
+            DataFeedTypes = new Dictionary<string, Type>();
+            DataFeedTypes.Add("GoogleDataFeed",typeof(GoogleDataFeed));
+        }
 
         public MainWindow()
         {
             DataContext = this;
+            _dataFeeds = new Dictionary<string, DataFeed>();
+            SetDataFeeds();
             InitializeComponent();
         }
 
@@ -45,6 +58,7 @@ namespace Hermés.GUI
         {
             get { return new string[] { "NaivePortfolio" }; }
         }
+
         public IEnumerable<string> BrokerItems
         {
             get { return new string[] { "AMPBroker" }; }
@@ -104,7 +118,6 @@ namespace Hermés.GUI
 
             PortfolioComboBox.IsEnabled = false;
             ConstructButton.IsEnabled = false;
-            SelectFile.IsEnabled = false;
             AddDataFeed.IsEnabled = false;
             DataFeedBox.IsEnabled = false;
 
@@ -126,39 +139,18 @@ namespace Hermés.GUI
 
         private void AddDataFeed_OnClick(object sender, RoutedEventArgs e)
         {
-            if (SelectedFile == null || 
-                SelectedFile.Text == null || 
-                SelectedFile.Text == "none")
-                return;
+            DataFeedSpecifier dfs = new DataFeedSpecifier(this);
+            dfs.ShowDialog();
 
-            var filename = SelectedFile.Text;
-            DataFeedBox.Items.Add(filename);
-            SelectedFile.Text = "none";
+            
         }
 
-        private void SelectedFile_OnTextChanged(object sender, TextChangedEventArgs e)
+
+        private void RemoveDataFeed_OnClick(object sender, RoutedEventArgs e)
         {
-            if (AddDataFeed == null)
-                return;
-
-            var text = SelectedFile.Text ?? "none";
-            AddDataFeed.IsEnabled = text != "none";
+            throw new NotImplementedException();
         }
 
-        private void SelectFile_OnClick(object sender, RoutedEventArgs e)
-        {
-            if (SelectedFile == null || SelectedFile.Text == null)
-                return;
-
-            var dlg = new Microsoft.Win32.OpenFileDialog();
-            var result = dlg.ShowDialog();
-
-            if (result != true) 
-                return;
-
-            var filename = dlg.FileName;
-            SelectedFile.Text = filename;
-        }
 
         private void ExitButton_OnClick(object sender, RoutedEventArgs e)
         {
@@ -194,5 +186,6 @@ namespace Hermés.GUI
             var window = new GeneticStrategyEditWindow();
             window.Show();
         }
+
     }
 }
