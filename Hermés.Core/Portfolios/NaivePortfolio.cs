@@ -29,7 +29,7 @@ namespace Hermés.Core.Portfolios
         public override void DispatchConcrete(FillEvent ev)
         {
             var position = new Position(ev.Market, ev.Direction, ev.FillPrice, ev.Size);
-            Positions.Add(ev.Time, position);
+            AddPosition(ev.Time, position);
         }
 
         public override void DispatchConcrete(MarketEvent e)
@@ -65,16 +65,21 @@ namespace Hermés.Core.Portfolios
 
         protected override double GetPortfolioValue()
         {
-            var posByMarket = new Dictionary<DataFeed, List<Position>>();
-            foreach (var item in Positions.OrderBy(item => item.Key))
+            if (Positions.Count == 0)
+                return _initialCapital;
+
+            Dictionary<DataFeed, List<Position>> posByMarket;
+            lock (Positions)
             {
-                List<Position> pos;
-                if (!posByMarket.TryGetValue(item.Value.Market, out pos))
-                    posByMarket.Add(item.Value.Market, new List<Position>());
-                posByMarket[item.Value.Market].Add(item.Value);
+                posByMarket =
+                    (from item in Positions.Values
+                        from position in item
+                        group position by position.Market
+                        into g
+                        select g).ToDictionary(g => g.Key, g => g.ToList());
             }
 
-            double portfolioValue = _initialCapital;
+            var portfolioValue = _initialCapital;
             foreach (var item in posByMarket)
             {
                 var market = item.Key;
@@ -98,13 +103,13 @@ namespace Hermés.Core.Portfolios
                     }
                 }
 
-                if (sizeInHold != 0)
-                {
-                    var directedPriceKind = sizeInHold > 0 ? PriceKind.Ask : PriceKind.Bid;
-                    var currentPrice = market.CurrentPrice(directedPriceKind);
+                if (sizeInHold < 1e-6) 
+                    continue;
 
-                    portfolioValue += (currentPrice.Close - lastPrice) * sizeInHold * market.PointPrice;
-                }
+                var directedPriceKind = sizeInHold > 0 ? PriceKind.Ask : PriceKind.Bid;
+                var currentPrice = market.CurrentPrice(directedPriceKind);
+
+                portfolioValue += (currentPrice.Close - lastPrice) * sizeInHold * market.PointPrice;
             }
 
             return portfolioValue;

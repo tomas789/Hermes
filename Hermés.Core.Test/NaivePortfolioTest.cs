@@ -1,4 +1,5 @@
 ﻿using System;
+using Hermés.Core.Brokers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Hermés.Core;
 using System.Threading;
@@ -70,16 +71,14 @@ namespace Hermés.Core.Test
             var kernel = portfolio.Kernel;
 
             portfolio.DataFeeds.AddDataFeed(datafeed);
+            portfolio.Broker = new AMPBroker();
 
-            kernel.AddEvent(new FillEvent(datafeed, TradeDirection.Buy, 100, 100, 0, 1));
-            kernel.AddEvent(new FillEvent(datafeed, TradeDirection.Buy, 100, 100, 0, 1));
-            kernel.AddEvent(new FillEvent(datafeed, TradeDirection.Buy, 100, 100, 0, 1));
+            kernel.AddEvent(new FillEvent(DateTime.MinValue, datafeed, TradeDirection.Buy, 100, 100, 0, 1));
+            kernel.AddEvent(new FillEvent(DateTime.MinValue, datafeed, TradeDirection.Buy, 100, 100, 0, 1));
+            kernel.AddEvent(new FillEvent(DateTime.MinValue, datafeed, TradeDirection.Buy, 100, 100, 0, 1));
 
-            kernel.RegisterEventConsumer(portfolio);
-            var task = new Task(kernel.Run);
-            task.Start();
-
-            Thread.Sleep(50);
+            while (kernel.Events.Count != 0)
+                kernel.Step();
             kernel.StopSimulation();
 
             var expectedValue = initial + 3 * 200 * pointPrice;
@@ -98,15 +97,12 @@ namespace Hermés.Core.Test
 
             portfolio.DataFeeds.AddDataFeed(datafeed);
 
-            kernel.AddEvent(new FillEvent(datafeed, TradeDirection.Sell, 100, 100, 0, 1));
-            kernel.AddEvent(new FillEvent(datafeed, TradeDirection.Sell, 100, 100, 0, 1));
-            kernel.AddEvent(new FillEvent(datafeed, TradeDirection.Sell, 100, 100, 0, 1));
+            kernel.AddEvent(new FillEvent(DateTime.MinValue, datafeed, TradeDirection.Sell, 100, 100, 0, 1));
+            kernel.AddEvent(new FillEvent(DateTime.MinValue, datafeed, TradeDirection.Sell, 100, 100, 0, 1));
+            kernel.AddEvent(new FillEvent(DateTime.MinValue, datafeed, TradeDirection.Sell, 100, 100, 0, 1));
 
-            kernel.RegisterEventConsumer(portfolio);
-            var task = new Task(kernel.Run);
-            task.Start();
-
-            Thread.Sleep(50);
+            while (kernel.Events.Count != 0)
+                kernel.Step();
             kernel.StopSimulation();
 
             var expectedValue = initial - 3 * 200 * pointPrice;

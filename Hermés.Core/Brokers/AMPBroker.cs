@@ -59,7 +59,7 @@ namespace Hermés.Core.Brokers
 
             
 
-            var fill = new FillEvent(ev.Market, ev.Direction, ev.Price, fillPrice.Close, cost, 1);
+            var fill = new FillEvent(_kernel.WallTime, ev.Market, ev.Direction, ev.Price, fillPrice.Close, cost, 1);
             Debug.WriteLine("AMPBroker filling: {0}, Time: {1}", fill, _kernel.WallTime);
             _kernel.AddEvent(fill);
         }

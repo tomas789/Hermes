@@ -20,9 +20,9 @@ namespace Hermés.Core.Events
         public double Cost;
         public double Size;
 
-        public FillEvent(DataFeed market, TradeDirection direction, 
+        public FillEvent(DateTime time, DataFeed market, TradeDirection direction, 
             double price, double fillPrice, double cost, double size)
-            : base(DateTime.Now)
+            : base(time)
         {
             Market = market;
             Direction = direction;

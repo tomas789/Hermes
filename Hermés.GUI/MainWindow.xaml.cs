@@ -68,9 +68,6 @@ namespace Hermés.GUI
         {
             ContinueButton.IsEnabled = false;
 
-            _portfolio.Broker = new AMPBroker();
-            _portfolio.Initialize();
-
             var begin = DateTime.Now;
             StatusBox.Content = "Working";
             var runTask = new Task(_portfolio.Kernel.Run);
@@ -133,7 +130,9 @@ namespace Hermés.GUI
                 _portfolio.DataFeeds.AddDataFeed(datafeed);
             }
 
-            _portfolio.Strategies.AddStrategy(new BuyAndHoldStrategy());
+            _portfolio.Strategies.AddStrategy(new GeneticStrategy());
+            _portfolio.Broker = new AMPBroker();
+            _portfolio.Initialize();
 
             ContinueButton.IsEnabled = true;
         }

@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Remoting;
 using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
@@ -18,7 +20,7 @@ namespace Hermés.Core.Strategies
         private GeneticStrategyConfiguration _config = 
             new GeneticStrategyConfiguration();
 
-        private Random _random = new Random();
+        private readonly Random _random = new Random();
 
         public GeneticStrategyConfiguration Configuration
         {
@@ -38,21 +40,22 @@ namespace Hermés.Core.Strategies
         private readonly Dictionary<GeneticOperator<Delegate>, int> _weightedOperators = 
             new Dictionary<GeneticOperator<Delegate>, int>(); 
 
-        private MarketEvent _evaluationContextEvent = null;
+        private PriceGroup _evaluationContext = null;
 
-        private List<Chromozome<Delegate>> _population = 
+        private readonly List<Chromozome<Delegate>> _population = 
             new List<Chromozome<Delegate>>();
 
         private bool _initialized = false;
 
-        private Chromozome<Delegate> _selectedChromozome = null;
-
         private Kernel _kernel;
+
+        private int _ticks = 0;
 
         public void Initialize(Kernel kernel)
         {
             if (_initialized)
                 throw new DoubleInitializationException();
+            _initialized = true;
 
             _kernel = kernel;
             
@@ -64,6 +67,10 @@ namespace Hermés.Core.Strategies
                 throw new InvalidOperationException(
                     "Population size have to be positive.");
 
+            if (_config.EvaluationLength > _config.MinimumRequiredLength)
+                throw new InvalidOperationException(
+                    "Evaluation length is longer then minimum required length.");
+
             _primitives.Add((Func<SignalKind>) (() => SignalKind.Buy));
             _primitives.Add((Func<SignalKind>) (() => SignalKind.Sell));
             _primitives.Add((Func<SignalKind>) (() => SignalKind.Hold));
@@ -72,10 +79,7 @@ namespace Hermés.Core.Strategies
             _primitives.Add((Func<double?>)(() => 0));
             _primitives.Add((Func<double?>)(() => 1));
 
-            _primitives.Add((Func<MarketEvent>)(() => _evaluationContextEvent));
-
-            _primitives.Add((Func<MarketEvent, PriceGroup>)((ev) => ev.Price));
-            _primitives.Add((Func<MarketEvent, int, PriceGroup>)((ev, i) => ev.Market.GetHistoricalPriceGroup(i)));
+            _primitives.Add((Func<PriceGroup>)(() => _evaluationContext));
 
             _primitives.Add((Func<int>)(() => 0));
             _primitives.Add((Func<int>)(() => 1));
@@ -96,26 +100,6 @@ namespace Hermés.Core.Strategies
             _primitives.Add((Func<int, int>)Math.Abs);
 
             _primitives.Add((Func<double, int>)((a) => (int)Math.Round(a)));
-
-            _primitives.Add((Func<MarketEvent, DateTime>)((ev) => ev.Time));
-
-            _primitives.Add((Func<DateTime, DateTime, bool>)((a, b) => a < b));
-            _primitives.Add((Func<DateTime, DateTime, bool>)((a, b) => a <= b));
-            _primitives.Add((Func<DateTime, DateTime, bool>)((a, b) => a > b));
-            _primitives.Add((Func<DateTime, DateTime, bool>)((a, b) => a >= b));
-            _primitives.Add((Func<DateTime, DateTime, bool>)((a, b) => a == b));
-
-            _primitives.Add((Func<TimeSpan>)(() => new TimeSpan(0, 0, 0, 1)));
-            _primitives.Add((Func<TimeSpan>)(() => new TimeSpan(0, 0, 1, 0)));
-            _primitives.Add((Func<TimeSpan>)(() => new TimeSpan(0, 1, 0, 0)));
-
-            _primitives.Add((Func<TimeSpan, TimeSpan, TimeSpan>)((a, b) => a + b));
-            _primitives.Add((Func<TimeSpan, TimeSpan, TimeSpan>)((a, b) => a - b));
-
-            _primitives.Add((Func<DateTime, TimeSpan, DateTime>)((a, b) => a + b));
-            _primitives.Add((Func<DateTime, TimeSpan, DateTime>)((a, b) => a - b));
-
-            _primitives.Add((Func<DateTime, DateTime, TimeSpan>)((a, b) => a - b));
 
             _primitives.Add((Func<PriceGroup, double>)((pg) => pg.Close));
 
@@ -156,15 +140,24 @@ namespace Hermés.Core.Strategies
             _primitives.Add((Func<double, double, bool>)((a, b) => a >= b));
             _primitives.Add((Func<double, double, bool>)((a, b) => a - b < 1e-6));
 
+            _primitives.Add((Func<bool>)(() => true));
+            _primitives.Add((Func<bool>)(() => false));
+
             _primitives.Add((Func<bool, SignalKind, SignalKind, SignalKind>)((cond, a, b) => cond ? a : b));
-            _primitives.Add((Func<bool, DateTime, DateTime, DateTime>)((cond, a, b) => cond ? a : b));
-            _primitives.Add((Func<bool, TimeSpan, TimeSpan, TimeSpan>)((cond, a, b) => cond ? a : b));
             _primitives.Add((Func<bool, double?, double?, double?>)((cond, a, b) => cond ? a : b));
             _primitives.Add((Func<bool, PriceGroup, PriceGroup, PriceGroup>)((cond, a, b) => cond ? a : b));
 
             var geneHelper = new DelegateGeneHelper();
-            AddGeneticOperator(new FullTreeGenerator<Delegate>(geneHelper, _primitives));
+
+            var fullTreeGenerator = new FullTreeGenerator<Delegate>(geneHelper, _primitives)
+            {
+                ReturnType = typeof (SignalKind)
+            };
+
+            AddGeneticOperator(fullTreeGenerator);
             AddGeneticOperator(new OnePointCrossover<Delegate>(geneHelper));
+
+            Debug.WriteLine("GeneticStrategy inititalized.");
         }
 
         public void AddGeneticOperator(GeneticOperator<Delegate> op, int weight = 1)
@@ -180,13 +173,18 @@ namespace Hermés.Core.Strategies
             var initializers = (from op in _weightedOperators 
                                 where op.Key.Arity == 0 
                                 select new { op = op.Key, weight = op.Value}).ToArray();
+
+            if (initializers.Length == 0)
+                throw new InvalidOperationException(
+                    "Initializing population without initializer.");
+
             var weightSum = (from ini in initializers select ini.weight).Sum();
 
             GeneticOperator<Delegate> initializer = null;
             var p = _random.Next(weightSum + 1);
             foreach (var i in initializers)
             {
-                if (p < i.weight)
+                if (p <= i.weight)
                 {
                     initializer = i.op;
                     break;
@@ -198,8 +196,13 @@ namespace Hermés.Core.Strategies
             if (initializer == null)
                 throw new ImpossibleException();
 
-            while (_population.Count < _config.PopulationSize)
-                _population.AddRange(initializer.Operator(new Chromozome<Delegate>[] { }));
+            for (var i = 0; _population.Count < _config.PopulationSize; ++i)
+            {
+                _population.AddRange(initializer.Operator(new Chromozome<Delegate>[] {}).Where(c => c.Count != 0));
+
+                if (i > _config.PopulationSize * 10)
+                    throw new InvalidOperationException("Unable to construct enough elements.");
+            }
         }
 
         private void NextGeneration()
@@ -239,6 +242,48 @@ namespace Hermés.Core.Strategies
         {
             foreach (var chromozome in _population)
             {
+                if (chromozome.Fitness != null && chromozome.Fitness.Valid)
+                    continue;
+
+                Debug.WriteLine("GeneticStrategy: Evaluating individual: {0}", chromozome);
+                var hold = 0;
+                var miss = 0;
+
+                var sizeInHold = 0.0;
+                var value = 0.0;
+
+                var priceGroup = ev.Market.GetHistoricalPriceGroup(_config.EvaluationLength);;
+
+                for (var i = _config.EvaluationLength - 1; i >= 1; --i)
+                {
+                    var lastPriceGroup = priceGroup;
+                    priceGroup = ev.Market.GetHistoricalPriceGroup(i);
+
+                    if (priceGroup == null)
+                    {
+                        continue;
+                    }
+
+                    value += (priceGroup.Close - lastPriceGroup.Close)*sizeInHold*ev.Market.PointPrice;
+
+                    _evaluationContext = priceGroup;
+                    var signal = (SignalKind)chromozome.DynamicInvoke();
+                    switch (signal)
+                    {
+                        case SignalKind.Buy:
+                            sizeInHold += 1;
+                            break;
+                        case SignalKind.Sell:
+                            sizeInHold -= 1;
+                            break;
+                    }
+                }
+
+                chromozome.Fitness = new Fitness(new [] { 1.0 });
+                chromozome.Fitness.Values[0] = value;
+                chromozome.Fitness.Valid = true;
+
+                Debug.WriteLine("GeneticStrategy: Chromozome value: {0}", value);
             }
         }
 
@@ -252,26 +297,42 @@ namespace Hermés.Core.Strategies
 
         private void DispatchConcrete(MarketEvent ev)
         {
-            if (ev.Market.Count < _config.MinimumRequiredLength)
+            ++_ticks;
+
+            if (_ticks < _config.MinimumRequiredLength)
                 return;
 
-            if (ev.Market.Count == _config.MinimumRequiredLength)
-            {
+            if (_ticks == _config.MinimumRequiredLength)
                 InitializePopulation();
-                EvaluatePopulation(ev);
-            }
-
-            if ((ev.Market.Count - _config.MinimumRequiredLength) % _config.UpdateInterval == 0)
-            {
+            else if ((_ticks - _config.MinimumRequiredLength) % _config.UpdateInterval == 0)
                 NextGeneration();
-                EvaluatePopulation(ev);
+                
+            EvaluatePopulation(ev);
+
+            Chromozome<Delegate> best = null;
+            foreach (var chromozome in _population.Where(chromozome => chromozome.Fitness.Valid))
+            {
+                if (best == null)
+                {
+                    best = chromozome;
+                    continue;
+                }
+
+                if (chromozome.Fitness.GetWeightedSum() > best.Fitness.GetWeightedSum())
+                    best = chromozome;
             }
 
-            _evaluationContextEvent = ev;
-            var evaluated = (SignalKind)_selectedChromozome.DynamicInvoke();
+            if (best == null)
+            {
+                return;
+            }
+
+
+
+            var evaluated = (SignalKind)best.DynamicInvoke();
             if (evaluated == SignalKind.Hold)
                 return;
-            var signal = new SignalEvent(_kernel.WallTime, ev.Market, (SignalKind)evaluated);
+            var signal = new SignalEvent(_kernel.WallTime, ev.Market, evaluated);
             _kernel.AddEvent(signal);
         }
 
@@ -290,6 +351,8 @@ namespace Hermés.Core.Strategies
         public int MinimumRequiredLength = 300;
 
         public int PopulationSize = 100;
+
+        public int EvaluationLength = 300;
     }
 
     public class Fitness : IComparable<Fitness>, IEquatable<Fitness>, ICloneable
@@ -356,8 +419,13 @@ namespace Hermés.Core.Strategies
         {
             return new Fitness(this.Weights);
         }
+
+        public double GetWeightedSum()
+        {
+            return Weights.Zip(Values, (a, b) => a*b).Sum();
+        }
     }
-    public class ValuesHelper
+    public class ValuesHelper : IEnumerable<double>
     {
         private readonly Fitness _fitness;
         private readonly double[] _values;
@@ -377,6 +445,16 @@ namespace Hermés.Core.Strategies
                 _values[i] = value;
             }
         }
+
+        public IEnumerator<double> GetEnumerator()
+        {
+            return ((IEnumerable<double>) _values).GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return _values.GetEnumerator();
+        }
     }
 
     /// <summary>
@@ -386,6 +464,11 @@ namespace Hermés.Core.Strategies
     public abstract class GeneticOperator<T>
     {
         private Random _random = new Random();
+
+        protected GeneticOperator(IGeneHelper<T> geneHelper)
+        {
+            GeneHelper = geneHelper;
+        } 
         
         public Random Random
         {
@@ -498,9 +581,8 @@ namespace Hermés.Core.Strategies
         private readonly IGeneHelper<T> _geneHelper; 
 
         public FullTreeGenerator(IGeneHelper<T> geneHelper, IEnumerable<T> primitiveSet)
+            : base(geneHelper)
         {
-            _geneHelper = geneHelper;
-
             var terminals = new List<T>();
             var functions = new List<T>();
             foreach (var primitive in primitiveSet)
@@ -552,7 +634,7 @@ namespace Hermés.Core.Strategies
             }
         }
 
-        private Type _returnType;
+        private Type _returnType = null;
 
         /// <summary>
         /// Return type of generated tree.
@@ -560,14 +642,7 @@ namespace Hermés.Core.Strategies
         public Type ReturnType
         {
             get { return _returnType; }
-            set
-            {
-                if (_terminalSet.All(terminal => _geneHelper.ReturnType(terminal) != value))
-                    throw new ArgumentException(
-                        "ReturnType is not reachable by current terminal set.");
-
-                _returnType = value;
-            }
+            set { _returnType = value; }
         }
 
         protected override int GetArity()
@@ -577,35 +652,76 @@ namespace Hermés.Core.Strategies
 
         protected override IList<Chromozome<T>> OperatorImpl(IList<Chromozome<T>> chromozomes)
         {
+            if (ReturnType == null)
+                throw new InvalidOperationException(
+                    "Trying to generate chromozome before return type was set.");
+
             var depth = _random.Next(_minDepth, _maxDepth);
             var chromozome = new Chromozome<T>(GeneHelper);
-            GenerateSubtree(chromozome, ReturnType, depth);
+            if (!GenerateSubtree(chromozome, ReturnType, depth))
+                return new Chromozome<T>[] {};
+
+            if (!chromozome.CheckTypeConstraints())
+                throw new ImpossibleException();
+
             return new [] {chromozome};
         }
 
-        private void GenerateSubtree(Chromozome<T> chromozome, Type type, int depth)
+        private bool GenerateSubtree(Chromozome<T> chromozome, Type type, int depth)
         {
             if (depth == 0)
             {
-                var allowedTerminals = (from terminal in _terminalSet
+                var allowedTerminals = (
+                    from terminal in _terminalSet
                     where GeneHelper.ReturnType(terminal) == type
                     select terminal).ToArray();
+
+                if (allowedTerminals.Length == 0)
+                {
+                    Debug.WriteLine("Type check failed at terminal; Type: {0}", type);
+                    return false;
+                }
+
                 chromozome.Add(allowedTerminals[_random.Next(allowedTerminals.Length)]);
             }
             else
             {
-                var allowedFunctions = (from function in _functionSet
+                var allowedFunctions = (
+                    from function in _functionSet
                     where GeneHelper.ReturnType(function) == type
                     select function).ToArray();
+
+                if (allowedFunctions.Length == 0)
+                {
+                    Debug.WriteLine("Type check failed at function; Type: {0}", type);
+                    return false;
+                }
+
                 var selected = allowedFunctions[_random.Next(allowedFunctions.Length)];
                 chromozome.Add(selected);
                 var arity = GeneHelper.Arity(selected);
                 for (var i = 0; i < arity; ++i)
-                    GenerateSubtree(
-                        chromozome, 
-                        GeneHelper.ArgumentType(selected, i), 
-                        depth - 1);
+                {
+                    var success = false;
+                    for (var tries = 0; tries < 5; ++tries)
+                    {
+                        if (!GenerateSubtree(chromozome, GeneHelper.ArgumentType(selected, i), depth - 1))
+                            continue;
+
+                        success = true;
+                        break;
+                    }
+
+                    if (success) 
+                        continue;
+
+                    Debug.WriteLine("Type check failed at recursive function; Type: {0}", type);
+                    chromozome.RemoveAt(chromozome.Count - 1);
+                    return false;
+                }
             }
+
+            return true;
         } 
     }
 
@@ -616,8 +732,8 @@ namespace Hermés.Core.Strategies
     public class OnePointCrossover<T> : GeneticOperator<T>
     {
         public OnePointCrossover(IGeneHelper<T> geneHelper)
+            :base (geneHelper)
         {
-            GeneHelper = geneHelper;
         } 
 
         protected override IList<Chromozome<T>> OperatorImpl(IList<Chromozome<T>> chromozomes)
@@ -633,6 +749,8 @@ namespace Hermés.Core.Strategies
                     if (!chromozomeTypes.TryGetValue(returnType, out nodeList))
                         chromozomeTypes.Add(returnType, new List<int>() { i });
                 }
+
+                types.Add(chromozomeTypes);
             }
 
             var commonTypes = new HashSet<Type>();
@@ -643,6 +761,10 @@ namespace Hermés.Core.Strategies
                                where commonTypes.Contains(commonType.Key) 
                                from cxPt in commonType.Value 
                                select new KeyValuePair<Type, int>(commonType.Key, cxPt)).ToArray();
+
+            if (lhsCommonItems.Length == 0)
+                return new List<Chromozome<T>>();
+
             var lhsItemSelected = lhsCommonItems[Random.Next(lhsCommonItems.Length)];
             var cxType = lhsItemSelected.Key;
             var lhsCxPt = lhsItemSelected.Value;
@@ -736,6 +858,11 @@ namespace Hermés.Core.Strategies
             _items.Add(del);
         }
 
+        public void RemoveAt(int index)
+        {
+            _items.RemoveAt(index);
+        }
+
         public int Count { get { return _items.Count; } }
 
         public Type GetReturnType()
@@ -756,21 +883,25 @@ namespace Hermés.Core.Strategies
             if (_typeValid.HasValue) 
                 return _typeValid.Value;
 
+            if (_items.Count == 0)
+                return true;
+
             Type type;
             var i = 0;
-            _typeValid = _checkInTreeTypeConstraints(ref i, out type) && typeof(T) == type;
+            _typeValid = _checkInTreeTypeConstraints(ref i, out type);
             return _typeValid.Value;
         }
 
         private bool _checkInTreeTypeConstraints(ref int i, out Type type)
         {
-            type = GeneHelper.ReturnType(_items[i]);
-            i += 1;
-            for (var arg = 0; arg < GeneHelper.Arity(_items[i]); ++arg)
+            var myPos = i++;
+            type = GeneHelper.ReturnType(_items[myPos]);
+            
+            for (var arg = 0; arg < GeneHelper.Arity(_items[myPos]); ++arg)
             {
                 Type paramType;
                 if (!_checkInTreeTypeConstraints(ref i, out paramType) ||
-                    paramType != GeneHelper.ArgumentType(_items[0], arg))
+                    paramType != GeneHelper.ArgumentType(_items[myPos], arg))
                     return false;
             }
 

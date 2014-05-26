@@ -249,7 +249,15 @@ namespace Hermés.Core.DataFeeds
 
         public override PriceGroup GetHistoricalPriceGroup(int lookbackPeriod)
         {
-            throw new NotImplementedException();
+            var dates = new List<DateTime>(_data.Keys);
+
+            if (dates.Count < lookbackPeriod)
+                return null;
+
+            var i = 0;
+            while (dates[i++] <= Kernel.WallTime && i < dates.Count) ;
+
+            return i - 1 - lookbackPeriod < 0 ? null : _data[dates[i - 1 - lookbackPeriod]];
         }
     }
 
