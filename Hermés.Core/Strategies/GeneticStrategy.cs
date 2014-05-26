@@ -755,6 +755,7 @@ namespace Hermés.Core.Strategies
         public FullTreeGenerator(IGeneHelper<T> geneHelper, IEnumerable<T> primitiveSet)
             : base(geneHelper)
         {
+            ReturnType = null;
             var terminals = new List<T>();
             var functions = new List<T>();
             foreach (var primitive in primitiveSet)
@@ -806,16 +807,10 @@ namespace Hermés.Core.Strategies
             }
         }
 
-        private Type _returnType = null;
-
         /// <summary>
         /// Return type of generated tree.
         /// </summary>
-        public Type ReturnType
-        {
-            get { return _returnType; }
-            set { _returnType = value; }
-        }
+        public Type ReturnType;
 
         protected override int GetArity()
         {
