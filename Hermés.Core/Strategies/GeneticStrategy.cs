@@ -45,11 +45,16 @@ namespace Hermés.Core.Strategies
         private readonly List<Chromozome<Delegate>> _population = 
             new List<Chromozome<Delegate>>();
 
+        private readonly Dictionary<GeneticSelector<Delegate>, int> _weightedSelectors = 
+            new Dictionary<GeneticSelector<Delegate>, int>(); 
+
         private bool _initialized = false;
 
         private Kernel _kernel;
 
         private int _ticks = 0;
+
+        private int _generation = 0;
 
         public void Initialize(Kernel kernel)
         {
@@ -148,14 +153,18 @@ namespace Hermés.Core.Strategies
             _primitives.Add((Func<bool, PriceGroup, PriceGroup, PriceGroup>)((cond, a, b) => cond ? a : b));
 
             var geneHelper = new DelegateGeneHelper();
+            var random = new Random();
 
             var fullTreeGenerator = new FullTreeGenerator<Delegate>(geneHelper, _primitives)
             {
-                ReturnType = typeof (SignalKind)
+                ReturnType = typeof (SignalKind),
+                Random = random
             };
 
             AddGeneticOperator(fullTreeGenerator);
-            AddGeneticOperator(new OnePointCrossover<Delegate>(geneHelper));
+            AddGeneticOperator(new OnePointCrossover<Delegate>(geneHelper) {Random = random});
+
+            AddGeneticSelector(new TournamentSelector<Delegate>(geneHelper, 3) {Random = random});
 
             Debug.WriteLine("GeneticStrategy inititalized.");
         }
@@ -163,16 +172,26 @@ namespace Hermés.Core.Strategies
         public void AddGeneticOperator(GeneticOperator<Delegate> op, int weight = 1)
         {
             if (weight <= 0)
-                throw new ArgumentException("Genetic operator weight have to be positive number.");
+                throw new ArgumentException(
+                    "Genetic operator weight have to be positive number.");
 
             _weightedOperators.Add(op, weight);
         }
 
-        private void InitializePopulation()
+        public void AddGeneticSelector(GeneticSelector<Delegate> sel, int weight = 1)
         {
-            var initializers = (from op in _weightedOperators 
-                                where op.Key.Arity == 0 
-                                select new { op = op.Key, weight = op.Value}).ToArray();
+            if (weight <= 0)
+                throw new ArgumentException(
+                    "Genetic selector weight have to be positive number.");
+
+            _weightedSelectors.Add(sel, weight);
+        }
+
+        private GeneticOperator<Delegate> GetRandomGeneticInitializerOperator()
+        {
+            var initializers = (from op in _weightedOperators
+                                where op.Key.Arity == 0
+                                select new { op = op.Key, weight = op.Value }).ToArray();
 
             if (initializers.Length == 0)
                 throw new InvalidOperationException(
@@ -196,9 +215,72 @@ namespace Hermés.Core.Strategies
             if (initializer == null)
                 throw new ImpossibleException();
 
+            return initializer;
+        }
+
+        private GeneticOperator<Delegate> GetRandomGeneticOperator()
+        {
+            var operators = (from op in _weightedOperators
+                                where op.Key.Arity != 0
+                                select new { op = op.Key, weight = op.Value }).ToArray();
+
+            if (operators.Length == 0)
+                throw new InvalidOperationException(
+                    "Initializing population without initializer.");
+
+            var weightSum = (from ini in operators select ini.weight).Sum();
+
+            GeneticOperator<Delegate> geneticOp = null;
+            var p = _random.Next(weightSum + 1);
+            foreach (var i in operators)
+            {
+                if (p <= i.weight)
+                    return i.op;
+
+                p -= i.weight;
+            }
+
+            throw new ImpossibleException();
+        }
+
+        private GeneticSelector<Delegate> GetRandomGeneticSelector()
+        {
+            var selectors = (from op in _weightedSelectors
+                             select new {op = op.Key, weight = op.Value}).ToArray();
+
+            if (selectors.Length == 0)
+                throw new InvalidOperationException(
+                    "No genetic selector set.");
+
+            var weightSum = (from ini in selectors select ini.weight).Sum();
+
+            GeneticSelector<Delegate> selector = null;
+            var p = _random.Next(weightSum + 1);
+            foreach (var i in selectors)
+            {
+                if (p <= i.weight)
+                {
+                    selector = i.op;
+                    break;
+                }
+
+                p -= i.weight;
+            }
+
+            if (selector == null)
+                throw new ImpossibleException();
+
+            return selector;
+        }
+
+        private void InitializePopulation()
+        {
+            _generation = 0;
+            var initializer = GetRandomGeneticInitializerOperator();
+
             for (var i = 0; _population.Count < _config.PopulationSize; ++i)
             {
-                _population.AddRange(initializer.Operator(new Chromozome<Delegate>[] {}).Where(c => c.Count != 0));
+                _population.AddRange(initializer.Operator(null).Where(c => c.Count != 0));
 
                 if (i > _config.PopulationSize * 10)
                     throw new InvalidOperationException("Unable to construct enough elements.");
@@ -207,84 +289,98 @@ namespace Hermés.Core.Strategies
 
         private void NextGeneration()
         {
+            ++_generation;
+
+            Debug.WriteLine("Doing generation {0}", _generation);
+
+            if (_population.Count == 0)
+                throw new InvalidOperationException(
+                    "Initialize population before calling NextGeneration.");
+
             var next = new List<Chromozome<Delegate>>();
             while (next.Count < _config.PopulationSize)
             {
-                GeneticOperator<Delegate> op = null;
-                var weightSum = (from weight in _weightedOperators.Values select weight).Sum();
-                var p = _random.Next(weightSum);
-                foreach (var i in _weightedOperators)
-                {
-                    if (p < i.Value)
-                    {
-                        op = i.Key;
-                        break;
-                    }
+                Debug.WriteLine("Next count {0}", next.Count);
 
-                    p -= i.Value;
-                }
-
-                if (op == null)
-                    throw new ImpossibleException();
+                var op = GetRandomGeneticOperator();
+                var sel = GetRandomGeneticSelector();
 
                 var chromozomes = new List<Chromozome<Delegate>>();
                 while  (chromozomes.Count < op.Arity)
-                    chromozomes.Add(_population[_random.Next(_population.Count)]);
+                    chromozomes.Add(sel.Operator(_population));
 
                 if (chromozomes.Count != op.Arity)
                     throw new ImpossibleException();
-                
-                next.AddRange(op.Operator(chromozomes));
+
+                var offspring = op.Operator(chromozomes);
+                next.AddRange(offspring);
             }
+
+            Debug.WriteLine("End doing generation {0}", _generation);
+        }
+
+        private void EvaluateChromozome(MarketEvent ev, Chromozome<Delegate> chromozome)
+        {
+            Debug.WriteLine("GeneticStrategy: Evaluating individual: {0}", chromozome);
+            var hold = 0;
+            var miss = 0;
+
+            var sizeInHold = 0.0;
+            var value = 0.0;
+
+            var priceGroup = ev.Market.GetHistoricalPriceGroup(_config.EvaluationLength); ;
+
+            for (var i = _config.EvaluationLength - 1; i >= 1; --i)
+            {
+                var lastPriceGroup = priceGroup;
+                priceGroup = ev.Market.GetHistoricalPriceGroup(i);
+
+                if (priceGroup == null)
+                {
+                    continue;
+                }
+
+                value += (priceGroup.Close - lastPriceGroup.Close) * sizeInHold * ev.Market.PointPrice;
+
+                _evaluationContext = priceGroup;
+                var signal = (SignalKind)chromozome.DynamicInvoke();
+                switch (signal)
+                {
+                    case SignalKind.Buy:
+                        if (priceGroup.Close - lastPriceGroup.Close <= 0)
+                            ++miss;
+                        sizeInHold += 1;
+                        break;
+                    case SignalKind.Sell:
+                        if (priceGroup.Close - lastPriceGroup.Close >= 0)
+                            ++miss;
+                        sizeInHold -= 1;
+                        break;
+                    case SignalKind.Hold:
+                        ++hold;
+                        break;
+                }
+            }
+
+            chromozome.Fitness = new Fitness(new[] { 1.0, -1.0, -1.0 });
+            chromozome.Fitness.Values[0] = value;
+            chromozome.Fitness.Values[1] = miss;
+            chromozome.Fitness.Values[2] = hold;
+            chromozome.Fitness.Valid = true;
+
+            Debug.WriteLine("GeneticStrategy: Chromozome value: {0}", value);
         }
 
         private void EvaluatePopulation(MarketEvent ev)
         {
-            foreach (var chromozome in _population)
-            {
-                if (chromozome.Fitness != null && chromozome.Fitness.Valid)
-                    continue;
+            var tasks = (from chromozome in _population
+                where chromozome.Fitness == null || !chromozome.Fitness.Valid
+                select new Task(() => EvaluateChromozome(ev, chromozome))).ToArray();
 
-                Debug.WriteLine("GeneticStrategy: Evaluating individual: {0}", chromozome);
-                var hold = 0;
-                var miss = 0;
+            foreach (var task in tasks)
+                task.Start();
 
-                var sizeInHold = 0.0;
-                var value = 0.0;
-
-                var priceGroup = ev.Market.GetHistoricalPriceGroup(_config.EvaluationLength);;
-
-                for (var i = _config.EvaluationLength - 1; i >= 1; --i)
-                {
-                    var lastPriceGroup = priceGroup;
-                    priceGroup = ev.Market.GetHistoricalPriceGroup(i);
-
-                    if (priceGroup == null)
-                    {
-                        continue;
-                    }
-
-                    value += (priceGroup.Close - lastPriceGroup.Close)*sizeInHold*ev.Market.PointPrice;
-
-                    _evaluationContext = priceGroup;
-                    var signal = (SignalKind)chromozome.DynamicInvoke();
-                    switch (signal)
-                    {
-                        case SignalKind.Buy:
-                            sizeInHold += 1;
-                            break;
-                        case SignalKind.Sell:
-                            sizeInHold -= 1;
-                            break;
-                    }
-                }
-
-                chromozome.Fitness = new Fitness(new [] { 1.0 });
-                chromozome.Fitness.Values[0] = value;
-                chromozome.Fitness.Valid = true;
-
-                Debug.WriteLine("GeneticStrategy: Chromozome value: {0}", value);
-            }
+            Task.WaitAll(tasks);
         }
 
         public void DispatchEvent(Event e)
@@ -303,11 +399,23 @@ namespace Hermés.Core.Strategies
                 return;
 
             if (_ticks == _config.MinimumRequiredLength)
+            {
                 InitializePopulation();
+                for (var i = 0; i < _config.FirstUpdateGenerations; ++i)
+                {
+                    EvaluatePopulation(ev);
+                    NextGeneration();
+                }
+            }
             else if ((_ticks - _config.MinimumRequiredLength) % _config.UpdateInterval == 0)
+            {
                 NextGeneration();
-                
-            EvaluatePopulation(ev);
+                for (var i = 0; i < _config.NextUpdateGenerations; ++i)
+                {
+                    EvaluatePopulation(ev);
+                    NextGeneration();
+                }
+            }
 
             Chromozome<Delegate> best = null;
             foreach (var chromozome in _population.Where(chromozome => chromozome.Fitness.Valid))
@@ -326,8 +434,6 @@ namespace Hermés.Core.Strategies
             {
                 return;
             }
-
-
 
             var evaluated = (SignalKind)best.DynamicInvoke();
             if (evaluated == SignalKind.Hold)
@@ -454,6 +560,72 @@ namespace Hermés.Core.Strategies
         IEnumerator IEnumerable.GetEnumerator()
         {
             return _values.GetEnumerator();
+        }
+    }
+
+    public abstract class GeneticSelector<T>
+    {
+        public Random Random = new Random();
+
+        public IGeneHelper<T> GeneHelper { get; private set; }
+
+        protected GeneticSelector(IGeneHelper<T> geneHelper)
+        {
+            GeneHelper = geneHelper;
+        }
+
+        public Chromozome<T> Operator(IList<Chromozome<T>> chromozomes)
+        {
+            if (GeneHelper == null)
+                throw new InvalidOperationException(
+                    "GeneHelper is not set before using GeneticOperator.");
+
+            return OperatorImpl(chromozomes);
+        }
+
+        protected abstract Chromozome<T> OperatorImpl(IList<Chromozome<T>> chromozomes);
+    }
+
+    public class TournamentSelector<T> : GeneticSelector<T>
+    {
+        private readonly int _tournamentSize;
+
+        public TournamentSelector(IGeneHelper<T> geneHelper, int tournamentSize)
+            : base(geneHelper)
+        {
+            if (tournamentSize < 1)
+                throw new ArgumentException(
+                    "Creating tournament selection of non-positive size.");
+
+            _tournamentSize = tournamentSize;
+        }
+
+        protected override Chromozome<T> OperatorImpl(IList<Chromozome<T>> chromozomes)
+        {
+            if (chromozomes.Count == 0)
+                return null;
+
+            var tournament = new List<Chromozome<T>>();
+            for (var i = 0; i < _tournamentSize; ++i)
+                tournament.Add(chromozomes[Random.Next(chromozomes.Count)]);
+
+            Chromozome<T> best = null;
+            foreach (var chromozome in chromozomes)
+            {
+                if (best == null || !best.Fitness.Valid)
+                {
+                    best = chromozome;
+                    continue;
+                }
+
+                var currentFitness = chromozome.Fitness.GetWeightedSum();
+                var bestFitness = best.Fitness.GetWeightedSum();
+                if (currentFitness > bestFitness)
+                    best = chromozome;
+
+            }
+
+            return best;
         }
     }
 
@@ -763,7 +935,7 @@ namespace Hermés.Core.Strategies
                                select new KeyValuePair<Type, int>(commonType.Key, cxPt)).ToArray();
 
             if (lhsCommonItems.Length == 0)
-                return new List<Chromozome<T>>();
+                return chromozomes;
 
             var lhsItemSelected = lhsCommonItems[Random.Next(lhsCommonItems.Length)];
             var cxType = lhsItemSelected.Key;
