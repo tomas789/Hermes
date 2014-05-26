@@ -9,7 +9,16 @@ using Hermés.Core.DataFeeds;
 
 namespace Hermés.GUI.DataFeedGUIs
 {
-    class GoogleDataFeedGUI
+    class GoogleDataFeedGUI : DataFeedGUI
     {
+        public override void SetPanel()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override DataFeed GetDataFeed()
+        {
+            throw new NotImplementedException();
+        }
     }
 }
