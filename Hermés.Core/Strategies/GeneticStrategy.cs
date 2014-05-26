@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Remoting;
 using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
@@ -38,7 +40,7 @@ namespace Hermés.Core.Strategies
         private readonly Dictionary<GeneticOperator<Delegate>, int> _weightedOperators = 
             new Dictionary<GeneticOperator<Delegate>, int>(); 
 
-        private MarketEvent _evaluationContextEvent = null;
+        private PriceGroup _evaluationContext = null;
 
         private List<Chromozome<Delegate>> _population = 
             new List<Chromozome<Delegate>>();
@@ -64,6 +66,10 @@ namespace Hermés.Core.Strategies
                 throw new InvalidOperationException(
                     "Population size have to be positive.");
 
+            if (_config.EvaluationLength > _config.MinimumRequiredLength)
+                throw new InvalidOperationException(
+                    "Evaluation length is longer then minimum required length.");
+
             _primitives.Add((Func<SignalKind>) (() => SignalKind.Buy));
             _primitives.Add((Func<SignalKind>) (() => SignalKind.Sell));
             _primitives.Add((Func<SignalKind>) (() => SignalKind.Hold));
@@ -72,10 +78,7 @@ namespace Hermés.Core.Strategies
             _primitives.Add((Func<double?>)(() => 0));
             _primitives.Add((Func<double?>)(() => 1));
 
-            _primitives.Add((Func<MarketEvent>)(() => _evaluationContextEvent));
-
-            _primitives.Add((Func<MarketEvent, PriceGroup>)((ev) => ev.Price));
-            _primitives.Add((Func<MarketEvent, int, PriceGroup>)((ev, i) => ev.Market.GetHistoricalPriceGroup(i)));
+            _primitives.Add((Func<PriceGroup>)(() => _evaluationContext));
 
             _primitives.Add((Func<int>)(() => 0));
             _primitives.Add((Func<int>)(() => 1));
@@ -96,26 +99,6 @@ namespace Hermés.Core.Strategies
             _primitives.Add((Func<int, int>)Math.Abs);
 
             _primitives.Add((Func<double, int>)((a) => (int)Math.Round(a)));
-
-            _primitives.Add((Func<MarketEvent, DateTime>)((ev) => ev.Time));
-
-            _primitives.Add((Func<DateTime, DateTime, bool>)((a, b) => a < b));
-            _primitives.Add((Func<DateTime, DateTime, bool>)((a, b) => a <= b));
-            _primitives.Add((Func<DateTime, DateTime, bool>)((a, b) => a > b));
-            _primitives.Add((Func<DateTime, DateTime, bool>)((a, b) => a >= b));
-            _primitives.Add((Func<DateTime, DateTime, bool>)((a, b) => a == b));
-
-            _primitives.Add((Func<TimeSpan>)(() => new TimeSpan(0, 0, 0, 1)));
-            _primitives.Add((Func<TimeSpan>)(() => new TimeSpan(0, 0, 1, 0)));
-            _primitives.Add((Func<TimeSpan>)(() => new TimeSpan(0, 1, 0, 0)));
-
-            _primitives.Add((Func<TimeSpan, TimeSpan, TimeSpan>)((a, b) => a + b));
-            _primitives.Add((Func<TimeSpan, TimeSpan, TimeSpan>)((a, b) => a - b));
-
-            _primitives.Add((Func<DateTime, TimeSpan, DateTime>)((a, b) => a + b));
-            _primitives.Add((Func<DateTime, TimeSpan, DateTime>)((a, b) => a - b));
-
-            _primitives.Add((Func<DateTime, DateTime, TimeSpan>)((a, b) => a - b));
 
             _primitives.Add((Func<PriceGroup, double>)((pg) => pg.Close));
 
@@ -157,8 +140,6 @@ namespace Hermés.Core.Strategies
             _primitives.Add((Func<double, double, bool>)((a, b) => a - b < 1e-6));
 
             _primitives.Add((Func<bool, SignalKind, SignalKind, SignalKind>)((cond, a, b) => cond ? a : b));
-            _primitives.Add((Func<bool, DateTime, DateTime, DateTime>)((cond, a, b) => cond ? a : b));
-            _primitives.Add((Func<bool, TimeSpan, TimeSpan, TimeSpan>)((cond, a, b) => cond ? a : b));
             _primitives.Add((Func<bool, double?, double?, double?>)((cond, a, b) => cond ? a : b));
             _primitives.Add((Func<bool, PriceGroup, PriceGroup, PriceGroup>)((cond, a, b) => cond ? a : b));
 
@@ -239,6 +220,37 @@ namespace Hermés.Core.Strategies
         {
             foreach (var chromozome in _population)
             {
+                var hold = 0;
+                var miss = 0;
+
+                var sizeInHold = 0.0;
+                var value = 0.0;
+
+                var priceGroup = ev.Market.GetHistoricalPriceGroup(_config.EvaluationLength);;
+
+                for (var i = _config.EvaluationLength - 1; i >= 1; ++i)
+                {
+                    var lastPriceGroup = priceGroup;
+                    priceGroup = ev.Market.GetHistoricalPriceGroup(i);
+
+                    value += (priceGroup.Close - lastPriceGroup.Close)*sizeInHold*ev.Market.PointPrice;
+
+                    _evaluationContext = priceGroup;
+                    var signal = (SignalKind)chromozome.DynamicInvoke();
+                    switch (signal)
+                    {
+                        case SignalKind.Buy:
+                            sizeInHold += 1;
+                            break;
+                        case SignalKind.Sell:
+                            sizeInHold -= 1;
+                            break;
+                    }
+                }
+
+                chromozome.Fitness = new Fitness(new [] { 1.0 });
+                chromozome.Fitness.Values[0] = value;
+                chromozome.Fitness.Valid = true;
             }
         }
 
@@ -267,11 +279,28 @@ namespace Hermés.Core.Strategies
                 EvaluatePopulation(ev);
             }
 
-            _evaluationContextEvent = ev;
-            var evaluated = (SignalKind)_selectedChromozome.DynamicInvoke();
+            EvaluatePopulation(ev);
+
+            Chromozome<Delegate> best = null;
+            foreach (var chromozome in _population.Where(chromozome => chromozome.Fitness.Valid))
+            {
+                if (best == null)
+                {
+                    best = chromozome;
+                    continue;
+                }
+
+                if (chromozome.Fitness.GetWeightedSum() > best.Fitness.GetWeightedSum())
+                    best = chromozome;
+            }
+
+            if (best == null)
+                return;
+
+            var evaluated = (SignalKind)best.DynamicInvoke();
             if (evaluated == SignalKind.Hold)
                 return;
-            var signal = new SignalEvent(_kernel.WallTime, ev.Market, (SignalKind)evaluated);
+            var signal = new SignalEvent(_kernel.WallTime, ev.Market, evaluated);
             _kernel.AddEvent(signal);
         }
 
@@ -290,6 +319,8 @@ namespace Hermés.Core.Strategies
         public int MinimumRequiredLength = 300;
 
         public int PopulationSize = 100;
+
+        public int EvaluationLength = 300;
     }
 
     public class Fitness : IComparable<Fitness>, IEquatable<Fitness>, ICloneable
@@ -356,8 +387,13 @@ namespace Hermés.Core.Strategies
         {
             return new Fitness(this.Weights);
         }
+
+        public double GetWeightedSum()
+        {
+            return Weights.Zip(Values, (a, b) => a*b).Sum();
+        }
     }
-    public class ValuesHelper
+    public class ValuesHelper : IEnumerable<double>
     {
         private readonly Fitness _fitness;
         private readonly double[] _values;
@@ -376,6 +412,16 @@ namespace Hermés.Core.Strategies
                 _fitness.Valid = false;
                 _values[i] = value;
             }
+        }
+
+        public IEnumerator<double> GetEnumerator()
+        {
+            return ((IEnumerable<double>) _values).GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return _values.GetEnumerator();
         }
     }
 
