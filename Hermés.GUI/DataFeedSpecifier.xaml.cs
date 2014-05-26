@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -15,6 +17,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using Hermés.Core.DataFeeds;
 using Hermés.GUI.DataFeedGUIs;
+using Microsoft.Win32;
 
 namespace Hermés.GUI
 {
@@ -25,14 +28,6 @@ namespace Hermés.GUI
     {
         private MainWindow _mainWindow;
         public Dictionary<Type, DataFeedGUI> DataFeedGuis;
-
-        public struct DataFeedInitialization
-        {
-            public Type Type;
-            public string Adress;
-            public int? PointPrice;
-            public CultureInfo CultureInfo;
-        }
 
         public void SetDataFeedGuis()
         {
@@ -61,6 +56,8 @@ namespace Hermés.GUI
             DataFeedPanel = DataFeedGuis[t].MakePanel();
             DataFeedPanel.Margin = new Thickness(0,104,0,0);
             MainGrid.Children.Add(DataFeedPanel);
+            
+
         }
     }
 }
