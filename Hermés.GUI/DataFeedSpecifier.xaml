@@ -1,12 +1,23 @@
 ﻿<Window x:Class="Hermés.GUI.DataFeedSpecifier"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="DataFeedSpecifier" Height="500" Width="300">
-    <Grid Name="MainGrid">
-        <StackPanel Name="IntroStackPanel" Visibility="Visible" Margin="0,0,0,371">
-            <Label Content="DataFeed type: " />
-            <ComboBox Name="TypeBox" ItemsSource="{Binding Path=DataFeedKeysItems}" SelectionChanged="TypeBox_OnSelectionChanged"/>
-        </StackPanel>
-        <StackPanel Name="DataFeedPanel" Margin="0,104,0,0"/>
+        Title="DataFeedSpecifier" Height="400" Width="300">
+    <Grid Name="MainGrid" Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition MinWidth="150" Width="*" />
+        </Grid.ColumnDefinitions>
+        
+        <Label Grid.Column="0" Grid.Row="0" Content="DataFeed type: " />
+        <ComboBox Grid.Column="1" Grid.Row="0" Name="TypeBox" ItemsSource="{Binding Path=DataFeedKeysItems}" SelectionChanged="TypeBox_OnSelectionChanged" Loaded="TypeBox_OnSelectionChanged" SelectedIndex="0" />
+        
+        <Label Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2" Content="Data Feed Options:" Margin="0 20 0 10" />
+        
+        <StackPanel Name="DataFeedPanel" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" />
     </Grid>
 </Window>
