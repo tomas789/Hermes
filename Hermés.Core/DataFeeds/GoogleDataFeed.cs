@@ -18,7 +18,7 @@ namespace Hermés.Core.DataFeeds
         private readonly string _fileName;
         private readonly TextReader _inputFileReader;
 
-        public int Count { 
+        public override int Count { 
             get { return _data.Count; }
         }
 

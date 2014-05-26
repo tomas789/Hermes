@@ -39,6 +39,11 @@ namespace Hermés.Core.Test
         {
             throw new NotImplementedException();
         }
+
+        public override int Count
+        {
+            get { throw new NotImplementedException(); }
+        }
     }
 
     [TestClass]

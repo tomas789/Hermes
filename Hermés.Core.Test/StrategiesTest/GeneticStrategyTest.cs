@@ -15,7 +15,7 @@ namespace Hermés.Core.Test.StrategiesTest
         public void GeneticStrategy_CheckTypesSingleNode()
         {
             Delegate node = (Func<int>) (() => 1);
-            var ch = new Chromozome<int>();
+            var ch = new Chromozome<Delegate>(new DelegateGeneHelper());
             ch.Add(node);
             Assert.IsTrue(ch.CheckTypeConstraints());
         }
@@ -24,7 +24,7 @@ namespace Hermés.Core.Test.StrategiesTest
         public void GeneticStrategy_CheckTypesSingleNodeInconsistentReturnTypes()
         {
             Delegate node = (Func<int>)(() => 1);
-            var ch = new Chromozome<double>();
+            var ch = new Chromozome<Delegate>(new DelegateGeneHelper());
             ch.Add(node);
             Assert.IsFalse(ch.CheckTypeConstraints());
         }
@@ -35,7 +35,7 @@ namespace Hermés.Core.Test.StrategiesTest
             Delegate sub = (Func<int, double, int>)((int a, double b) => a - (int)b);
             Delegate lhs = (Func<int>)(() => 10);
             Delegate rhs = (Func<int>)(() => 5);
-            var ch = new Chromozome<double>();
+            var ch = new Chromozome<Delegate>(new DelegateGeneHelper());
             ch.Add(sub);
             ch.Add(lhs);
             ch.Add(rhs);
@@ -48,7 +48,7 @@ namespace Hermés.Core.Test.StrategiesTest
             Delegate sub = (Func<int, int, int>)((int a, int b) => a - b);
             Delegate lhs = (Func<double>)(() => 10);
             Delegate rhs = (Func<int>)(() => 5);
-            var ch = new Chromozome<double>();
+            var ch = new Chromozome<Delegate>(new DelegateGeneHelper());
             ch.Add(sub);
             ch.Add(lhs);
             ch.Add(rhs);
@@ -59,7 +59,7 @@ namespace Hermés.Core.Test.StrategiesTest
         public void GeneticStrategy_ChromozomeEvalSingleTerminalNode()
         {
             Delegate ccc = (Func<int>)(() => 1);
-            var ch1 = new Chromozome<int>();
+            var ch1 = new Chromozome<Delegate>(new DelegateGeneHelper());
             ch1.Add(ccc);
 
             var res = ch1.DynamicInvoke();
@@ -73,7 +73,7 @@ namespace Hermés.Core.Test.StrategiesTest
             Delegate sub = (Func<int, int, int>)((int a, int b) => a - b);
             Delegate lhs = (Func<int>)(() => 6);
             Delegate rhs = (Func<int>)(() => 5);
-            var ch = new Chromozome<int>();
+            var ch = new Chromozome<Delegate>(new DelegateGeneHelper());
 
             ch.Add(sub);
             ch.Add(lhs);
@@ -92,7 +92,7 @@ namespace Hermés.Core.Test.StrategiesTest
         public void GeneticStrategy_ChromozomeEvalIncompleteTree()
         {
             Delegate sub = (Func<int, int, int>)((int a, int b) => a - b);
-            var ch = new Chromozome<int>();
+            var ch = new Chromozome<Delegate>(new DelegateGeneHelper());
 
             ch.Add(sub);
 

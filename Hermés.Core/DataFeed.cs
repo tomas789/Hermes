@@ -23,6 +23,8 @@ namespace Hermés.Core
         public Kernel Kernel;
         public CultureInfo CultureInfo = new CultureInfo("en");
 
+        public abstract int Count { get; }
+
         public CultureInfo getCultureInfo()
         {
             return CultureInfo;

@@ -41,40 +41,42 @@ namespace Hermés.GUI
             InitializeComponent();
         }
 
-        public IEnumerable<string> ComboItems
+        public IEnumerable<string> PortfolioItems
         {
-            get { return new string[] {"NaivePortfolio", "Test 2"}; }
+            get { return new string[] { "NaivePortfolio" }; }
+        }
+        public IEnumerable<string> BrokerItems
+        {
+            get { return new string[] { "AMPBroker" }; }
         }
 
-        private void InitializeButton_OnClick(object sender, RoutedEventArgs e)
+        private void RunButton_OnClick(object sender, RoutedEventArgs e)
         {
+            ContinueButton.IsEnabled = false;
+
             _portfolio.Broker = new AMPBroker();
             _portfolio.Initialize();
 
-            RunButton.IsEnabled = true;
-            InitializeButton.IsEnabled = false;
-        }
-        private void RunButton_OnClick(object sender, RoutedEventArgs e)
-        {
             var begin = DateTime.Now;
-            StatusBox.Text = "Working";
+            StatusBox.Content = "Working";
             var runTask = new Task(_portfolio.Kernel.Run);
             runTask.ContinueWith(delegate
             {
                 StatusBox.Dispatcher.BeginInvoke((Action)delegate
                 {
-                    StatusBox.Text = string.Format("Done in {0}, value {1}", DateTime.Now - begin,
+                    StatusBox.Content = string.Format("Done in {0}, value {1}", DateTime.Now - begin,
                         _portfolio.PortfolioValue);
                 });
             });
 
             runTask.Start();
+
         }
 
         private void StepButton_onClick(object sender, RoutedEventArgs e)
         {
             _portfolio.Kernel.Step();
-            EventCounter.Content = string.Format("Events: {0}, Portfolio value: {1}, WallTime: {2}", 
+            StatusBox.Content = string.Format("Events: {0}, Portfolio value: {1}, WallTime: {2}", 
                 _portfolio.Kernel.Events.Count,
                 _portfolio.PortfolioValue,
                 _portfolio.Kernel.WallTime);
@@ -120,7 +122,7 @@ namespace Hermés.GUI
 
             _portfolio.Strategies.AddStrategy(new BuyAndHoldStrategy());
 
-            InitializeButton.IsEnabled = true;
+            ContinueButton.IsEnabled = true;
         }
 
         private void AddDataFeed_OnClick(object sender, RoutedEventArgs e)
@@ -157,6 +159,41 @@ namespace Hermés.GUI
 
             var filename = dlg.FileName;
             SelectedFile.Text = filename;
+        }
+
+        private void ExitButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            Process.GetCurrentProcess().Kill();
+        }
+
+        private void StatusBox_Update(object o, EventArgs sender)
+        {
+            if (StatusBox == null || StatusBox.Content == null)
+                return;
+
+            if (_portfolio == null)
+            {
+                StatusBox.Content = "Portfolio not initialized yet.";
+                return;
+            }
+
+            StatusBox.Content = string.Format("Events: {0}, Portfolio value: {1}, WallTime: {2}",
+                _portfolio.Kernel.Events.Count,
+                _portfolio.PortfolioValue,
+                _portfolio.Kernel.WallTime);
+        }
+
+        private void StatusBox_OnLoad(object sender, RoutedEventArgs e)
+        {
+            var myDispatcherTimer = new DispatcherTimer {Interval = new TimeSpan(0, 0, 0, 0, 100)};
+            myDispatcherTimer.Tick += StatusBox_Update;
+            myDispatcherTimer.Start();
+        }
+
+        private void GeneticEditorButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            var window = new GeneticStrategyEditWindow();
+            window.Show();
         }
     }
 }
