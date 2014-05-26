@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -12,6 +13,8 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using Hermés.Core.DataFeeds;
+using Hermés.GUI.DataFeedGUIs;
 
 namespace Hermés.GUI
 {
@@ -21,7 +24,7 @@ namespace Hermés.GUI
     public partial class DataFeedSpecifier : Window
     {
         private MainWindow _mainWindow;
-        //private Dictionary<string,voodoo> 
+        public Dictionary<Type, DataFeedGUI> DataFeedGuis;
 
         public struct DataFeedInitialization
         {
@@ -31,7 +34,12 @@ namespace Hermés.GUI
             public CultureInfo CultureInfo;
         }
 
-
+        public void SetDataFeedGuis()
+        {
+            DataFeedGuis = new Dictionary<Type, DataFeedGUI>();
+            if (!DataFeedGuis.ContainsKey(typeof (GoogleDataFeed)))
+                DataFeedGuis.Add(typeof(GoogleDataFeed),new GoogleDataFeedGUI());
+        }
 
         public IEnumerable<string> DataFeedKeysItems
         {
@@ -42,13 +50,17 @@ namespace Hermés.GUI
         {
             DataContext = this;
             _mainWindow = mainWindow;
+            SetDataFeedGuis();
             InitializeComponent();
         }
 
-
         private void TypeBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            throw new NotImplementedException();
+            var t = _mainWindow.DataFeedTypes[TypeBox.SelectedItem.ToString()];
+            MainGrid.Children.Remove(DataFeedPanel);
+            DataFeedPanel = DataFeedGuis[t].MakePanel();
+            DataFeedPanel.Margin = new Thickness(0,104,0,0);
+            MainGrid.Children.Add(DataFeedPanel);
         }
     }
 }

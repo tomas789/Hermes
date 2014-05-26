@@ -29,6 +29,7 @@ using Hermés.Core.Strategies;
 namespace Hermés.GUI
 {
 
+
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
@@ -139,18 +140,14 @@ namespace Hermés.GUI
 
         private void AddDataFeed_OnClick(object sender, RoutedEventArgs e)
         {
-            DataFeedSpecifier dfs = new DataFeedSpecifier(this);
+            var dfs = new DataFeedSpecifier(this);
             dfs.ShowDialog();
-
-            
         }
-
 
         private void RemoveDataFeed_OnClick(object sender, RoutedEventArgs e)
         {
             throw new NotImplementedException();
         }
-
 
         private void ExitButton_OnClick(object sender, RoutedEventArgs e)
         {

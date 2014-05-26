@@ -8,9 +8,9 @@ using Hermés.Core;
 
 namespace Hermés.GUI
 {
-    public abstract class DataFeedGUI : StackPanel
+    public abstract class DataFeedGUI
     {
-        public abstract void SetPanel();
+        public abstract StackPanel MakePanel();
         public abstract DataFeed GetDataFeed();
     }
 }

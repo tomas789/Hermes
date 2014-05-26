@@ -22,6 +22,7 @@ namespace Hermés.GUI.DataFeedGUIControls
     {
         public SelectFile()
         {
+            DataContext = this;
             InitializeComponent();
         }
     }
