@@ -116,8 +116,20 @@ namespace Hermés.Core
         /// <summary>
         /// Set of all positions executed by portfolio.
         /// </summary>
-        protected Dictionary<DateTime, Position> Positions = 
-            new Dictionary<DateTime, Position>();
+        protected Dictionary<DateTime, List<Position>> Positions = 
+            new Dictionary<DateTime, List<Position>>();
+
+        protected void AddPosition(DateTime time, Position position)
+        {
+            lock (Positions)
+            {
+                List<Position> pos;
+                if (!Positions.TryGetValue(time, out pos))
+                    Positions.Add(time, new List<Position>());
+
+                Positions[time].Add(position);
+            }
+        }
 
         #region Event dispatching
 
