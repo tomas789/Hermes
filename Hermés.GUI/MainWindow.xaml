@@ -13,7 +13,8 @@
             <ComboBox Name="BrokerComboBox" ItemsSource="{Binding Path=BrokerItems}" SelectedIndex="0" />
 
             <Label Content="Data Feeds" Margin="0 10 0 0" />
-            <ListBox Name="DataFeedBox" ScrollViewer.VerticalScrollBarVisibility="Visible" MinHeight="150" MaxHeight="150" />
+            <ListBox Name="DataFeedBox" ScrollViewer.VerticalScrollBarVisibility="Visible" MinHeight="150" MaxHeight="150" 
+                     ItemsSource="{Binding Path=DataFeedItems}" />
 
             <Grid Margin="0 5 0 0">
                 <Grid.ColumnDefinitions>
@@ -25,7 +26,8 @@
                 <Button Grid.Column="0" Name="AddDataFeed" Content="Add DataFeed" IsEnabled="True" Click="AddDataFeed_OnClick" />
                 <Button Grid.Column="1" Name="RemoveDataFeed" Content="Remove DataFeed" IsEnabled="False" Click="RemoveDataFeed_OnClick"/>
             </Grid>
-
+            <Label Name="InitialCapitaLabel" Content="Initial Capital:"/>
+            <TextBox Name="InitialCapitalTextBox"/>
             <Button Name="ConstructButton" Content="Construct and initialize simulation" Click="ConstructButton_OnClick" Margin="0 5 0 0" />
 
             

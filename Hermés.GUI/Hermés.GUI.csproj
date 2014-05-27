@@ -69,6 +69,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="DataFeedRemover.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="DataFeedSpecifier.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -90,6 +94,9 @@
       <DependentUpon>SelectFile.xaml</DependentUpon>
     </Compile>
     <Compile Include="DataFeedGUIs\GoogleDataFeedGUI.cs" />
+    <Compile Include="DataFeedRemover.xaml.cs">
+      <DependentUpon>DataFeedRemover.xaml</DependentUpon>
+    </Compile>
     <Compile Include="DataFeedSpecifier.xaml.cs">
       <DependentUpon>DataFeedSpecifier.xaml</DependentUpon>
     </Compile>

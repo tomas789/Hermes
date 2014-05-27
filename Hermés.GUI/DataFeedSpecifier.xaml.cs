@@ -17,6 +17,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using System.Diagnostics;
+using Hermés.Core;
 using Hermés.Core.DataFeeds;
 using Hermés.GUI.DataFeedGUIs;
 using Microsoft.Win32;
@@ -80,6 +81,46 @@ namespace Hermés.GUI
             }
 
             DataFeedPanel.Dispatcher.Invoke(DispatcherPriority.Render, (Action)(() => { }));
+        }
+
+        private void ConfirmButton_OnClick(object sender, RoutedEventArgs eventArgs)
+        {
+            if (_mainWindow == null || _mainWindow.DataFeedTypes == null ||
+                TypeBox == null || TypeBox.SelectedItem == null || DataFeedPanel == null
+                || _mainWindow.DataFeedBox == null)
+                return;
+            
+            try
+            {
+                Type type;
+                if (!_mainWindow.DataFeedTypes.TryGetValue(TypeBox.SelectedItem.ToString(), out type))
+                    throw new Exception("Internal error (no item in DataFeedTypes found)");
+
+                DataFeedGUI gui;
+                if (!DataFeedGuis.TryGetValue(type, out gui))
+                    throw new Exception("Internal error (no item in DataFeedGuis found)");
+
+                var dataFeed = gui.GetDataFeed();
+                var dataFeedName = gui.GetDataFeedName();
+
+                // not sure about exception in here
+                if (dataFeedName == "" || dataFeed == null)
+                    return;
+
+                _mainWindow.AddSelectedDataFeed(dataFeedName,dataFeed);
+                DataFeedPanel.Dispatcher.Invoke(DispatcherPriority.Render, (Action)(() => { }));
+                this.Close();
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine("Got exception {0}", e.Message);
+                var errorLabel = new Label { Content = "Error: " + e.Message };
+            }
+        }
+
+        private void CancelButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            this.Close();
         }
     }
 }

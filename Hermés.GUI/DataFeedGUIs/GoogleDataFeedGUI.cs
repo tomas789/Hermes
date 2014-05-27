@@ -31,9 +31,6 @@ namespace Hermés.GUI.DataFeedGUIs
         private Label _cultureInfoLabel;
         private TextBox _cultureInfoTextBox;
 
-        private Button _confirmButton;
-        private Button _cancelButton;
-
         public override StackPanel MakePanel()
         {
             _panel = new StackPanel();
@@ -44,11 +41,7 @@ namespace Hermés.GUI.DataFeedGUIs
             _pointPriceLabel = new Label { Content = "Point Price: ", Visibility = Visibility.Visible };
             _pointPriceTextBox = new TextBox { Visibility = Visibility.Visible };
             _cultureInfoLabel = new Label { Content = "Culture Info: ", Visibility = Visibility.Visible };
-            _cultureInfoTextBox = new TextBox { Text = "en", Visibility = Visibility.Visible };
-            _confirmButton = new Button { Content = "Confirm Adding DataFeed", Visibility = Visibility.Visible };
-            _confirmButton.Click += _confirmButton_OnButtonClick;
-            _cancelButton = new Button { Content = "Storno Adding DataFeed", Visibility = Visibility.Visible };
-            _cancelButton.Click += _cancelButton_OnButtonClick;
+            _cultureInfoTextBox = new TextBox { Text = "en-US", Visibility = Visibility.Visible };
 
             _panel.Children.Add(_fileNameButton);
             _panel.Children.Add(_fileNameTextBox);
@@ -61,12 +54,12 @@ namespace Hermés.GUI.DataFeedGUIs
 
         private void _cancelButton_OnButtonClick(object sender, RoutedEventArgs e)
         {
-            throw new NotImplementedException();
+            
         }
 
         private void _confirmButton_OnButtonClick(object sender, RoutedEventArgs e)
         {
-            throw new NotImplementedException();
+
         }
 
         private void _fileNameButton_OnButtonClick(object sender, System.Windows.RoutedEventArgs e)
@@ -80,11 +73,27 @@ namespace Hermés.GUI.DataFeedGUIs
 
         public override DataFeed GetDataFeed()
         {
-            // beware, here could be problem with parsing and exceptions
-            var pointPrice = Convert.ToDouble(_pointPriceLabel.Content.ToString());
-            var gdf = new GoogleDataFeed(_fileNameTextBox.Text, pointPrice);
-            gdf.setCultureInfo(new CultureInfo(_cultureInfoTextBox.Text));
-            return gdf;
+            
+            try // data parsing exception
+            {
+                var cultureInfo = new CultureInfo(_cultureInfoTextBox.Text);
+                double pointPrice;
+                if (_pointPriceTextBox.Text == "")
+                    throw new InvalidDataException();
+                pointPrice = Convert.ToDouble(_pointPriceTextBox.Text,cultureInfo);
+                var gdf = new GoogleDataFeed(_fileNameTextBox.Text, pointPrice);
+                gdf.setCultureInfo(cultureInfo);
+                return gdf;
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
+        }
+
+        public override string GetDataFeedName()
+        {
+            return _fileNameTextBox.Text;
         }
     }
 }

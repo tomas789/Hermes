@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Linq;
 using System.Net.Mime;
 using System.Security.Cryptography.X509Certificates;
+using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -28,7 +29,7 @@ using Hermés.Core.Strategies;
 
 namespace Hermés.GUI
 {
-
+    // TODO: make dependency property for conversion string->DataFeed DataFeed->string
 
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -43,8 +44,7 @@ namespace Hermés.GUI
 
         public void SetDataFeeds()
         {
-            DataFeedTypes = new Dictionary<string, Type>();
-            DataFeedTypes.Add("GoogleDataFeed",typeof(GoogleDataFeed));
+            DataFeedTypes = new Dictionary<string, Type> {{"GoogleDataFeed", typeof (GoogleDataFeed)}};
         }
 
         public MainWindow()
@@ -65,6 +65,11 @@ namespace Hermés.GUI
             get { return new string[] { "AMPBroker" }; }
         }
 
+        public IEnumerable<string> DataFeedItems
+        {
+            get { return _dataFeeds.Keys.ToArray(); }
+        }
+
         private void RunButton_OnClick(object sender, RoutedEventArgs e)
         {
             ContinueButton.IsEnabled = false;
@@ -82,7 +87,6 @@ namespace Hermés.GUI
             });
 
             runTask.Start();
-
         }
 
         private void StepButton_onClick(object sender, RoutedEventArgs e)
@@ -122,13 +126,10 @@ namespace Hermés.GUI
             AddDataFeed.IsEnabled = false;
             DataFeedBox.IsEnabled = false;
 
-            foreach (var datafeed in from object filenameItem in DataFeedBox.Items
-                select filenameItem.ToString()
-                into filename
-                select new GoogleDataFeed(filename, 1))
+            foreach (var dataFeed in _dataFeeds)
             {
-                Debug.WriteLine("Adding datafeed: {0}", datafeed);
-                _portfolio.DataFeeds.AddDataFeed(datafeed);
+                Debug.WriteLine("Adding datafeed: {0}", dataFeed.Key);
+                _portfolio.DataFeeds.AddDataFeed(dataFeed.Value);
             }
 
             _portfolio.Strategies.AddStrategy(new GeneticStrategy());
@@ -144,9 +145,35 @@ namespace Hermés.GUI
             dfs.ShowDialog();
         }
 
+        public void AddSelectedDataFeed(string dataFeedName, DataFeed dataFeed)
+        {
+            if (dataFeed == null || _dataFeeds == null || DataFeedBox == null ||
+                dataFeedName == "")
+                return;
+            _dataFeeds.Add(dataFeedName,dataFeed);
+            DataFeedBox.ItemsSource = DataFeedItems;
+            RemoveDataFeed.IsEnabled = true;
+        }
+
         private void RemoveDataFeed_OnClick(object sender, RoutedEventArgs e)
         {
-            throw new NotImplementedException();
+            if (_dataFeeds == null || DataFeedBox == null)
+                return;
+            var rdf = new DataFeedRemover(this);
+            rdf.ShowDialog();
+        }
+
+        public void RemoveSelectedDataFeed(string dataFeedName)
+        {
+            if (_dataFeeds == null || DataFeedBox == null || dataFeedName == "")
+                return;
+            // not sure about which exception in here
+            if (! _dataFeeds.ContainsKey(dataFeedName))
+                throw new IdentityNotMappedException();
+            _dataFeeds.Remove(dataFeedName);
+            DataFeedBox.ItemsSource = DataFeedItems;
+            if (_dataFeeds.Count == 0)
+                RemoveDataFeed.IsEnabled = false;
         }
 
         private void ExitButton_OnClick(object sender, RoutedEventArgs e)
