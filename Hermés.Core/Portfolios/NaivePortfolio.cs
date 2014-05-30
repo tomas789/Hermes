@@ -28,8 +28,7 @@ namespace Hermés.Core.Portfolios
 
         public override void DispatchConcrete(FillEvent ev)
         {
-            var position = new Position(ev.Market, ev.Direction, ev.FillPrice, ev.Size);
-            AddPosition(ev.Time, position);
+            AddPosition(ev.Time, ev.Position);
         }
 
         public override void DispatchConcrete(MarketEvent e)
@@ -59,8 +58,8 @@ namespace Hermés.Core.Portfolios
                     throw new ImpossibleException();
             }
 
-            var order = new OrderEvent(WallTime, e.Market, direction, OrderKind.Market);
-            Kernel.AddEvent(order);
+            var position = Position.MakeMarketOrder(WallTime, e.Market, direction, 1);
+            Kernel.AddEvent(new OrderEvent(WallTime, position));
         }
 
         protected override double GetPortfolioValue()
@@ -90,16 +89,30 @@ namespace Hermés.Core.Portfolios
 
                 foreach (var position in positions)
                 {
+                    double size;
+
+                    switch (position.Direction)
+                    {
+                        case TradeDirection.Buy:
+                            size = position.Size;
+                            break;
+                        case TradeDirection.Sell:
+                            size = -1*position.Size;
+                            break;
+                        default:
+                            throw new ImpossibleException();
+                    }
+
                     if (sizeInHold == 0) 
                     {
-                        sizeInHold = position.Size;
-                        lastPrice = position.Price;
+                        sizeInHold = size;
+                        lastPrice = position.FillPrice;
                     }
                     else
                     {
-                        portfolioValue += (position.Price - lastPrice) * position.Size * market.PointPrice;
+                        portfolioValue += (position.FillPrice - lastPrice) * size * market.PointPrice;
                         sizeInHold += position.Size;
-                        lastPrice = position.Price;
+                        lastPrice = position.FillPrice;
                     }
                 }
 

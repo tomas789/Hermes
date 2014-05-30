@@ -37,12 +37,14 @@ namespace Hermés.Core.Brokers
             if (_kernel == null)
                 throw new ArgumentNullException();
 
+            var position = ev.Position;
+
             var cost = DefaultCost;
-            if (TradeCosts.ContainsKey(ev.Market))
-                cost = TradeCosts[ev.Market];
+            if (TradeCosts.ContainsKey(ev.Position.Market))
+                cost = TradeCosts[ev.Position.Market];
 
             PriceKind kind;
-            switch (ev.Direction) {
+            switch (ev.Position.Direction) {
                 case TradeDirection.Buy:
                     kind = PriceKind.Ask;
                     break;
@@ -53,15 +55,13 @@ namespace Hermés.Core.Brokers
                     throw new ImpossibleException();
             }
 
-            var fillPrice = ev.Market.CurrentPrice(kind);
+            var fillPrice = ev.Position.Market.CurrentPrice(kind);
             if (fillPrice == null)
                 throw new Exception("Failed to get current price.");
 
-            
-
-            var fill = new FillEvent(_kernel.WallTime, ev.Market, ev.Direction, ev.Price, fillPrice.Close, cost, 1);
-            Debug.WriteLine("AMPBroker filling: {0}, Time: {1}", fill, _kernel.WallTime);
-            _kernel.AddEvent(fill);
+            position.Fill(_kernel.WallTime, fillPrice.Close, cost);
+            Debug.WriteLine("AMPBroker filling: {0}, Time: {1}", position, _kernel.WallTime);
+            _kernel.AddEvent(new FillEvent(_kernel.WallTime, position));
         }
 
         public void Dispose()

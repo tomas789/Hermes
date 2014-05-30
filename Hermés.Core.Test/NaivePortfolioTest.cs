@@ -72,10 +72,14 @@ namespace Hermés.Core.Test
 
             portfolio.DataFeeds.AddDataFeed(datafeed);
             portfolio.Broker = new AMPBroker();
+            portfolio.Initialize();
 
-            kernel.AddEvent(new FillEvent(DateTime.MinValue, datafeed, TradeDirection.Buy, 100, 100, 0, 1));
-            kernel.AddEvent(new FillEvent(DateTime.MinValue, datafeed, TradeDirection.Buy, 100, 100, 0, 1));
-            kernel.AddEvent(new FillEvent(DateTime.MinValue, datafeed, TradeDirection.Buy, 100, 100, 0, 1));
+            foreach (var size in new[] {1, 1, 1})
+            {
+                var position = Position.MakeMarketOrder(DateTime.MinValue, datafeed, TradeDirection.Buy, 1);
+                position.Fill(DateTime.MinValue, 300, 0);
+                kernel.AddEvent(new FillEvent(DateTime.MinValue, position));
+            }
 
             while (kernel.Events.Count != 0)
                 kernel.Step();
@@ -88,7 +92,7 @@ namespace Hermés.Core.Test
         [TestMethod]
         public void NaivePortfolio_SingleTickerSellPortfolioValue()
         {
-            const double initial = 1000.0;
+            var initial = 1000.0;
             var pointPrice = 50.0;
             var portfolio = new NaivePortfolio(initial);
             var datafeed = new DataFeedMock(300, pointPrice);
@@ -96,10 +100,15 @@ namespace Hermés.Core.Test
             var kernel = portfolio.Kernel;
 
             portfolio.DataFeeds.AddDataFeed(datafeed);
+            portfolio.Broker = new AMPBroker();
+            portfolio.Initialize();
 
-            kernel.AddEvent(new FillEvent(DateTime.MinValue, datafeed, TradeDirection.Sell, 100, 100, 0, 1));
-            kernel.AddEvent(new FillEvent(DateTime.MinValue, datafeed, TradeDirection.Sell, 100, 100, 0, 1));
-            kernel.AddEvent(new FillEvent(DateTime.MinValue, datafeed, TradeDirection.Sell, 100, 100, 0, 1));
+            foreach (var size in new[] { 1, 1, 1 })
+            {
+                var position = Position.MakeMarketOrder(DateTime.MinValue, datafeed, TradeDirection.Sell, 1);
+                position.Fill(DateTime.MinValue, 300, 0);
+                kernel.AddEvent(new FillEvent(DateTime.MinValue, position));
+            }
 
             while (kernel.Events.Count != 0)
                 kernel.Step();

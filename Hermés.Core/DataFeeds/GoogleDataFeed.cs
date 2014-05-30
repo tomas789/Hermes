@@ -222,7 +222,7 @@ namespace Hermés.Core.DataFeeds
         {
         }
 
-        public override PriceGroup CurrentPrice(PriceKind priceKind)
+        public override PriceGroup CurrentPrice(PriceKind priceKind = PriceKind.Unspecified)
         {
             PriceGroup group;
             if (_data.TryGetValue(Kernel.WallTime, out group))
