@@ -77,7 +77,7 @@ namespace Hermés.Core.Test
             foreach (var size in new[] {1, 1, 1})
             {
                 var position = Position.MakeMarketOrder(DateTime.MinValue, datafeed, TradeDirection.Buy, 1);
-                position.Fill(DateTime.MinValue, 300, 0);
+                position.Fill(DateTime.MinValue, 100, 0);
                 kernel.AddEvent(new FillEvent(DateTime.MinValue, position));
             }
 
@@ -106,7 +106,7 @@ namespace Hermés.Core.Test
             foreach (var size in new[] { 1, 1, 1 })
             {
                 var position = Position.MakeMarketOrder(DateTime.MinValue, datafeed, TradeDirection.Sell, 1);
-                position.Fill(DateTime.MinValue, 300, 0);
+                position.Fill(DateTime.MinValue, 100, 0);
                 kernel.AddEvent(new FillEvent(DateTime.MinValue, position));
             }
 

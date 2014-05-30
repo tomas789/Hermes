@@ -64,9 +64,32 @@ namespace Hermés.Core.Portfolios
 
         protected override double GetPortfolioValue()
         {
-            if (Positions.Count == 0)
-                return _initialCapital;
+            var price = _initialCapital;
 
+            lock (Positions)
+            {
+                var currentPriceCache = new Dictionary<DataFeed, PriceGroup>();
+
+                foreach (var position in Positions)
+                {
+                    var market = position.Market;
+                    if (!currentPriceCache.ContainsKey(market))
+                    {
+                        var currentPrice = market.CurrentPrice();
+                        if (currentPrice == null)
+                            throw new InvalidOperationException(
+                                string.Format("Unable to get current price of {0} at time {1}", market, WallTime));
+
+                        currentPriceCache.Add(market, currentPrice);
+                    }
+
+                    price += position.Valuate(currentPriceCache[market]);
+                }
+            }
+
+            return price;
+
+            /*
             Dictionary<DataFeed, List<Position>> posByMarket;
             lock (Positions)
             {
@@ -125,7 +148,7 @@ namespace Hermés.Core.Portfolios
                 portfolioValue += (currentPrice.Close - lastPrice) * sizeInHold * market.PointPrice;
             }
 
-            return portfolioValue;
+            return portfolioValue; */
         }
     }
 }

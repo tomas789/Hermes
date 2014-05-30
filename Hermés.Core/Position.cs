@@ -74,5 +74,14 @@ namespace Hermés.Core
                 : string.Format("Unfilled position: Size {0}, Direction: {1}, Order price {2}",
                     Size, Direction, OrderPrice);
         }
+
+        public double Valuate(PriceGroup currentGroup)
+        {
+            if (!IsFilled)
+                throw new InvalidOperationException("Cannot evaluate unfilled order.");
+
+            var signedSize = Size * ((Direction == TradeDirection.Buy) ? 1 : -1);
+            return (currentGroup.Close - FillPrice)*signedSize*Market.PointPrice - Cost;
+        }
     }
 }
