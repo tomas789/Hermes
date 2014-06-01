@@ -4,10 +4,17 @@
         xmlns:gui="clr-namespace:Hermés.GUI"
         Title="Hermés demo application" Height="520" Width="400">
     <Window.ResizeMode>NoResize</Window.ResizeMode>
+    <Window.Resources>
+        <Style TargetType="Button">
+            <Setter Property="Margin" Value="5 2 5 2" />
+            <Setter Property="Padding" Value="5 3 5 3" />
+        </Style>
+        <gui:MainWindow x:Key="MainWindow" />
+    </Window.Resources>
     <Grid>
         <StackPanel Margin="10">
             <Label Content="Portfolio type: " />
-            <ComboBox Name="PortfolioComboBox" ItemsSource="{Binding Path=PortfolioItems}" SelectedIndex="0" />
+            <ComboBox Name="PortfolioComboBox" ItemsSource="{Binding Path=RegisteredPortfolios}" SelectedIndex="0" />
 
             <Label Content="Broker type: " />
             <ComboBox Name="BrokerComboBox" ItemsSource="{Binding Path=BrokerItems}" SelectedIndex="0" />
@@ -27,15 +34,15 @@
                 <Button Grid.Column="1" Name="RemoveDataFeed" Content="Remove DataFeed" IsEnabled="False" Click="RemoveDataFeed_OnClick"/>
             </Grid>
             <Label Name="InitialCapitaLabel" Content="Initial Capital:"/>
-            <TextBox Name="InitialCapitalTextBox"/>
+            <TextBox Name="InitialCapitalTextBox" />
             <Button Name="ConstructButton" Content="Construct and initialize simulation" Click="ConstructButton_OnClick" Margin="0 5 0 0" />
 
             
             <Label Content="Controlo flow: " Margin="0 10 0 0" />
 
             <StackPanel Orientation="Horizontal">
-                <Button Name="ContinueButton" Click="RunButton_OnClick" IsEnabled="False" Content="Run / Continue" Margin="0 0 3 0" />
-                <Button Name="StepButton" Content="Step" Click="StepButton_onClick" Margin="0 0 3 0" />
+                <Button Name="ContinueButton" Click="RunButton_OnClick" IsEnabled="False" Content="Run / Continue" />
+                <Button Name="StepButton" Content="Step" Click="StepButton_onClick" />
                 <Button Name="StopButton" Content="Stop" Click="StopButton_OnClick" />
                 
                 <Button Name="GeneticEditorButton" Content="Open Genetic Editor" Click="GeneticEditorButton_OnClick" />

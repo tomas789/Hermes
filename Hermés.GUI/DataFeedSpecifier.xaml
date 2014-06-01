@@ -7,7 +7,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
-            <RowDefinition />
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
@@ -21,7 +21,18 @@
         
         <StackPanel Name="DataFeedPanel" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" />
         
-        <Button Name="ConfirmButton" Grid.Row="3" Grid.Column="0" Content="Confirm" Click="ConfirmButton_OnClick"/>
-        <Button Name="CancelButton" Grid.Row="3" Grid.Column="1" Content="Cancel" Click="CancelButton_OnClick"/>
+        <StackPanel Grid.Column="0" Grid.Row="3" Grid.ColumnSpan="2" Orientation="Horizontal">
+            <StackPanel.HorizontalAlignment>Right</StackPanel.HorizontalAlignment>
+            <StackPanel.Resources>
+                <Style TargetType="Button">
+                    <Setter Property="Margin" Value="0 0 5 0" />
+                    <Setter Property="Padding" Value="8 5 8 5"></Setter>
+                </Style>
+            </StackPanel.Resources>
+            <Button Name="ConfirmButton" Content="Confirm" Click="ConfirmButton_OnClick" FontWeight="Bold" />
+            <Button Name="CancelButton" Content="Cancel" Click="CancelButton_OnClick" />
+        </StackPanel>
+        
+        
     </Grid>
 </Window>
