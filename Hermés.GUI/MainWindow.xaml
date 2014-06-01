@@ -14,7 +14,7 @@
     <Grid>
         <StackPanel Margin="10">
             <Label Content="Portfolio type: " />
-            <ComboBox Name="PortfolioComboBox" ItemsSource="{Binding Path=RegisteredPortfolios}" SelectedIndex="0" />
+            <ComboBox Name="PortfolioComboBox" ItemsSource="{Binding Path=PortfolioItems}" SelectedIndex="0" />
 
             <Label Content="Broker type: " />
             <ComboBox Name="BrokerComboBox" ItemsSource="{Binding Path=BrokerItems}" SelectedIndex="0" />
