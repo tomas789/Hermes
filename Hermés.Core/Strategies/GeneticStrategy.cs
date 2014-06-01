@@ -161,6 +161,10 @@ namespace Hermés.Core.Strategies
                 Random = random
             };
 
+            var trees = fullTreeGenerator.Operator(null);
+            var tree = trees[0];
+            Debug.WriteLine("output: {0}", tree.DynamicInvoke());
+
             AddGeneticOperator(fullTreeGenerator);
             AddGeneticOperator(new OnePointCrossover<Delegate>(geneHelper) {Random = random});
 
@@ -300,8 +304,6 @@ namespace Hermés.Core.Strategies
             var next = new List<Chromozome<Delegate>>();
             while (next.Count < _config.PopulationSize)
             {
-                Debug.WriteLine("Next count {0}", next.Count);
-
                 var op = GetRandomGeneticOperator();
                 var sel = GetRandomGeneticSelector();
 
@@ -435,6 +437,8 @@ namespace Hermés.Core.Strategies
                 return;
             }
 
+            Debug.WriteLine("Best individual fitness: {0}", best.Fitness);
+
             var evaluated = (SignalKind)best.DynamicInvoke();
             if (evaluated == SignalKind.Hold)
                 return;
@@ -529,6 +533,20 @@ namespace Hermés.Core.Strategies
         public double GetWeightedSum()
         {
             return Weights.Zip(Values, (a, b) => a*b).Sum();
+        }
+
+        public override string ToString()
+        {
+            if (Weights.Length == 0)
+                return "empty fitness";
+
+            var str = new StringBuilder();
+            var items = Weights.Zip(Values, (a, b) => string.Format("{0} {1}", a, b)).ToArray();
+            for (var i = 0; i < items.Length - 1; ++i)
+                str.Append(items[i]).Append(", ");
+            str.Append(items[items.Length - 1]);
+
+            return string.Format("[{0}]({1})", GetWeightedSum(), str);
         }
     }
     public class ValuesHelper : IEnumerable<double>
