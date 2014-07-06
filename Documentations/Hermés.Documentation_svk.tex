@@ -1,0 +1,75 @@
+\documentclass[a4paper]{article}
+
+\usepackage[slovak]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[colorinlistoftodos]{todonotes}
+
+\title{Projekt Hermés}
+
+\author{Tomáš Krejčí \& Martin Mečiar}
+\date{}
+
+
+
+
+\begin{document}
+\maketitle
+\noindent\makebox[\linewidth]{\rule{\paperwidth}{0.4pt}}
+\newpage
+\section{Užívateľská dokumentácia}
+
+Po spustení aplikácie sa nám otvorí okno Hermés demo aplication, v ktorom je potrebné vykonať následné kroky. 
+\begin{enumerate}
+\item Vyberieme typ Portfolia, ktoré budeme chcieť simulovať.
+\item Vyberieme typ Brokera, ktorý bude uskutočnovať príkazy nákupu a predaju.
+\item Vyberieme DataFeedy, ktoré z ktorých budeme čerpať dáta pre simuláciu. DataFeedy pridávame tlačítkom Add DataFeed. Po stlačení Add DataFeed sa nám otvorí nové okno, kde vyberieme DataFeed a postupne odzhora dolu budeme vyplňovať  jednotlivé políčka (všetky ukázané políčka sú pre daný typ DataFeedu povinné). Odstrániť DataFeed môžeme pomocou tlačítka Remove DataFeed.
+\item Do vyplníme vstupný kapitál simulácie.
+\item Spustíme simuláciu pomocou tlačítka Construct and initialize simulation.
+\item Control flow simulácie môžeme ovládať z posledného riadku.
+\end{enumerate}
+
+\section{Programátorská dokumentácia}
+
+\subsection{Z pohľadu projektov}
+Hermés sa skladá z 2 projektov: Hermés.Core a Hermés.GUI. 
+
+Hermés.Core obsahuje vnútornú implementáciu všetkých potrebných častí projektu, ktoré sa netýkajú grafického rozhrania. Je to čisto event-driven knižnica.
+
+Hermés.GUI obsahuje implementáciu grafického rozhrania k projektu Hermés.Core. Je to demonstračná aplikácia využívajúca knižnicu Hermés.Core.
+
+
+\subsection{Hermés.Core z pohľadu návrhu}
+Základnou jednotkou simulácie je abstraktná trieda \textbf{Event}. Objekty medzi sebou komunikujú na základe eventov. Eventy v simulácií(všetky musia byť potomkami Eventu) sa delia podľa účelu na: \textit{MarketEventy}, \textit{SignalEventy}, \textit{OrderEventy}, \textit{FillEventy}. 
+
+Základnými objektami pre simuláciu sú potomkovia/implementácie/instancie nasledovných objektov/interfacov: Kernel, DataFeed, IBroker, IStrategy, Portfolio.
+
+Hlavným objektom simulácie je \textbf{Kernel}. Kernel vlastní čas, v ktorom sa momentálne situácia nachádza, prioritnú frontu eventov pre celú simuláciu a list objektov implementujúcich IEventConsumer(IBroker, IStrategy, Portfolio). Hlavný dispatcher eventov sa nachádza v tejto triede. V simulácií sa nachádza len jedna instancia Kernelu. Prístup ku Kernelu je jedine skrz Portfolio a má na sebe implementovanú metódu AddEvent. Pri dispatchovaní eventu je event ponúknutý všetkým IEventConsumerom.
+
+V simulácií sa môže nachádzať 0 až N datafeedov dediacich od abstraktnej triedy \textbf{DataFeed}, z ktorých simulácia čerpá vstupné data z externého zdroja a mení ich na podobu eventov(\textit{MarketEventov}). Eventov z daného zdroja môže byť ľubovoľné množstvo. Dôležité je, aby pracoval na agregovaných OHLC dátach a nie na tick-by-tick dátach. Datafeedy môžu byť dva druhy: online(je to neustále streamovanie nových eventov – napr reálna burza) a offline(jednorázové historické dáta).
+
+\textbf{Stratégie} určujú, podľa daného vstupu(väčšinou len podľa \textit{MarketEventov}), či je rozumné v danej chvíli akcie daného typu nakúpiť, predať alebo nič nevykonať a vytvára tak \textit{SignalEventy}. 
+
+\textbf{Portfolio} riadi simuláciu a taktiež určuje z množiny stratégií, ktoré stratégie(konkrétne \textit{SignalEventy}) sa budú obchodovať. Rozhoduje sa podľa vnútornej logiky riadenej position sizingom a risk managementom. Príkazy, ktoré sa rozhodne uskutočňovať(konkrétne \textit{SignalEventy}) označí pre Brokera na vykonanie(zmení \textit{SignalEvent} na \textit{OrderEvent}). Pre danú simuláciu je vždy len jedno Portfólio. Vytvorí si automaticky instanciu Kernelu, ktorý je tiež len jeden pre simuláciu.
+
+\textbf{Broker} spracuváva eventy predaja a nákupu položiek trhu vyhodnotených Portfoliom ako správny príkaz(\textit{OrderEventy}). Po skutočnom alebo simulovanom úspešnom uskutočnení príkazu vytvorí \textit{FillEvent}, ktorý si odoberie Portfolio. Broker je práve jeden pre danú simuláciu.
+
+
+\subsection{Workflow pre Hermés.Core}
+\begin{enumerate}
+\item Vytvoríme inštanciu potomka triedy Portfolio.
+\item Pridáme Brokera.
+\item Zaregistrujeme DataFeedy.
+\item Pridáme využívané stratégie.
+\item Na Portfóliu zavoláme metódu Initialize, čím znemožníme zmenu vnútorného stavu(predošlých nastavení).
+\item Na dispatcheri spustíme EventLoop.
+\item Vo chvíli, keď chceme simuláciu zastaviť tak zavoláme StopProcesing.
+\item Výsledky simulácie môžeme z niečoho vytiahnuť(terajšia verzia poskytuje prístup k dátam jedine cez Portfolio).
+\end{enumerate}
+
+
+\subsection{Portfolio.GetPortfolioValue}
+Táto metóda na základe predošlých FillEventov spočíta na aktuálnu hodnotu Portfólia. Hodnota zahrňuje Cash+AktuálnaHodnotaVšetkýchPozícií.
+
+
+
+\end{document}
