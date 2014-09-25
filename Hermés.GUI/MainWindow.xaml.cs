@@ -211,5 +211,10 @@ namespace Hermés.GUI
             window.Show();
         }
 
+        private void ShowValuesButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            var window = new ShowValuesOverTime();
+            window.Show();
+        }
     }
 }
